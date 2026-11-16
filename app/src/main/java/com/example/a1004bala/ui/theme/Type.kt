@@ -9,6 +9,10 @@ import androidx.compose.ui.unit.sp
 import com.example.a1004bala.R
 
 // Set of Material typography styles to start with
+val Onest = FontFamily(
+    Font(R.font.onest_regular, FontWeight.Normal),
+    Font(R.font.onest_bold, FontWeight.Bold)
+)
 val Typography = Typography(
     displaySmall = TextStyle(
         fontFamily = Onest,
