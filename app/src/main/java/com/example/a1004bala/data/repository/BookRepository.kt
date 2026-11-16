@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface BookRepository {
     fun getBooks(): Flow<List<Book>>
-    fun getBook(id: Int): Flow<Book>
+    fun getBook(id: Int): Flow<Book?>
     fun getQuotes(bookId: Int): Flow<List<Quote>>
 
     suspend fun addBook(title: String, author: String,
