@@ -27,6 +27,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,6 +41,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.rememberNavController
+import com.example.a1004bala.ui.navigation.BookWormNavGraph
 import com.example.a1004bala.ui.theme.BookWormTheme
 
 class MainActivity : ComponentActivity() {
@@ -50,7 +53,7 @@ class MainActivity : ComponentActivity() {
             var dark by remember { mutableStateOf(false) }
             val systemDark = isSystemInDarkTheme()
             var useSystem by remember { mutableStateOf(true) }
-            BookWormTheme(darkTheme = if (useSystem) systemDark else dark) {
+            BookWormTheme(darkTheme = isSystemInDarkTheme()) {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     containerColor = MaterialTheme.colorScheme.background
