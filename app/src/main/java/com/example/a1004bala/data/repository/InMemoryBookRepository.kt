@@ -47,7 +47,11 @@ class InMemoryBookRepository: BookRepository{
     }
 
     override suspend fun updateBook(book: Book) {
-        books.update { list -> list.map { if (it.id == book.id) book else it } }
+        books.update {
+            list -> list.map {
+                if (it.id == book.id) book else it
+            }
+        }
     }
 
     override suspend fun updateCurrentPage(bookId: Int, page: Int) {
@@ -89,12 +93,14 @@ class InMemoryBookRepository: BookRepository{
     }
 
     override suspend fun deleteQuote(quoteId: Int) {
-        quotes.update { list -> list.filterNot { it.id == quoteId } }
+        quotes.update {
+            list -> list.filterNot { it.id == quoteId }
+        }
     }
-
 
     private inline fun updateWhere(bookId: Int, crossinline transform: (Book) -> Book) {
         books.update { list -> list.map { if (it.id == bookId) transform(it) else it } }
     }
+
 }
 
