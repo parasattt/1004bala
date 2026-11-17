@@ -32,7 +32,6 @@ class BookDetailsViewModel(
         _uiState.update { it.copy(pageInput = value, pageError = null) }
     }
 
-    /** A step changes the draft only; invalid text must be corrected before stepping. */
     fun stepPage(delta: Int) {
         val state = _uiState.value
         val book = state.book ?: return
@@ -119,7 +118,6 @@ class BookDetailsViewModel(
         val state = _uiState.value
         val book = state.book ?: return
         if (quoteId in state.deletingQuoteIds) return
-        // Repository deletion accepts a global ID; only expose quotes of this book.
         if (state.quotes.none { it.id == quoteId && it.bookId == book.id }) return
         _uiState.update {
             it.copy(deletingQuoteIds = it.deletingQuoteIds + quoteId, quoteDeleteError = null)
@@ -203,7 +201,6 @@ class BookDetailsViewModel(
                             state.copy(
                                 book = book,
                                 isLoading = false,
-                                // A saved blank string is an intentional draft, not a missing value.
                                 pageInput = savedStateHandle.get<String>(PAGE_DRAFT)
                                     ?: book?.currentPage?.toString().orEmpty()
                             )
@@ -234,7 +231,6 @@ class BookDetailsViewModel(
     }
 }
 
-/** Shared by the save action and its boundary tests; invalid input never reaches the repository. */
 internal fun pageInputError(value: String, totalPages: Int): String? {
     val page = value.trim().toIntOrNull()
         ?: return "Бүтін сан енгізіңіз"
@@ -246,7 +242,6 @@ internal fun pageInputError(value: String, totalPages: Int): String? {
 internal fun quoteTextError(value: String): String? =
     if (value.isBlank()) "Дәйексөз мәтінін енгізіңіз" else null
 
-/** Quote page numbers start at 1; a blank value means the page is unspecified. */
 internal fun quotePageInputError(value: String, totalPages: Int): String? {
     if (value.isBlank()) return null
     val page = value.trim().toIntOrNull() ?: return "Бүтін сан енгізіңіз"

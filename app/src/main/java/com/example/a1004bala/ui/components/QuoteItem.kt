@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import com.example.a1004bala.data.model.Quote
 import com.example.a1004bala.ui.theme.BookWormTheme
 
-/** Displays a quote; its owner handles deletion through the callback. */
 @Composable
 fun QuoteItem(
     quote: Quote,

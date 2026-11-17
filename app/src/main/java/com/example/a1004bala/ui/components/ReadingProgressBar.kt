@@ -21,7 +21,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.a1004bala.ui.theme.BookWormTheme
 
-/** The caller supplies saved progress; editing a page draft does not change the ring. */
 @Composable
 fun ReadingProgressBar(
     progress: Float,
