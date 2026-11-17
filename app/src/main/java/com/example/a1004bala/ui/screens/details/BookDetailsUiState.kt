@@ -17,6 +17,8 @@ data class BookDetailsUiState(
     val quotePageError: String? = null,
     val isAddingQuote: Boolean = false,
     val quoteSaveError: String? = null,
+    val deletingQuoteIds: Set<Int> = emptySet(),
+    val quoteDeleteError: String? = null,
     val isSaving: Boolean = false,
     val actionError: String? = null
 )
