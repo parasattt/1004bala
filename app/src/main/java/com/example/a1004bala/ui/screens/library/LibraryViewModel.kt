@@ -9,11 +9,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class LibraryViewModel(
     private val repository: BookRepository
 ): ViewModel(){
-    // TODO: ким жасасада дурыстап истее uiState, onTabSelected(), deleteBook()
     private val selectedStatus = MutableStateFlow(BookStatus.READING)
 
     val uiState: StateFlow<LibraryUiState> = combine(
@@ -35,5 +35,11 @@ class LibraryViewModel(
 
     fun onTabSelected(status: BookStatus) {
         selectedStatus.value = status
+    }
+
+    fun deleteBook(bookId: Int) {
+        viewModelScope.launch {
+            repository.deleteBook(bookId)
+        }
     }
 }
