@@ -68,7 +68,7 @@ class BookDetailsViewModel(
     init {
         val id = bookId
         if (id == null) {
-            _uiState.update { it.copy(isLoading = false) }
+            _uiState.update { it.copy(isLoading = false, isQuotesLoading = false) }
         } else {
             viewModelScope.launch {
                 repository.getBook(id)
@@ -83,6 +83,20 @@ class BookDetailsViewModel(
                                 isLoading = false,
                                 pageInput = if (state.book == null) book?.currentPage?.toString().orEmpty() else state.pageInput
                             )
+                        }
+                    }
+            }
+            viewModelScope.launch {
+                repository.getQuotes(id)
+                    .catch { error ->
+                        if (error is CancellationException) throw error
+                        _uiState.update {
+                            it.copy(isQuotesLoading = false, quotesLoadError = "Дәйексөздерді жүктеу мүмкін болмады")
+                        }
+                    }
+                    .collect { quotes ->
+                        _uiState.update {
+                            it.copy(quotes = quotes, isQuotesLoading = false, quotesLoadError = null)
                         }
                     }
             }
