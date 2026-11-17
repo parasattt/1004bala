@@ -20,7 +20,34 @@ class BookDetailsViewModel(
     val uiState = _uiState.asStateFlow()
 
     fun onPageInputChange(value: String) {
+        if (_uiState.value.isSaving) return
         _uiState.update { it.copy(pageInput = value, pageError = null) }
+    }
+
+    fun updatePages() {
+        val state = _uiState.value
+        val book = state.book ?: return
+        if (state.isSaving) return
+
+        val error = pageInputError(state.pageInput, book.totalPages)
+        if (error != null) {
+            _uiState.update { it.copy(pageError = error, actionError = null) }
+            return
+        }
+        val page = state.pageInput.trim().toInt()
+        _uiState.update { it.copy(isSaving = true, pageError = null, actionError = null) }
+        viewModelScope.launch {
+            try {
+                repository.updateCurrentPage(book.id, page)
+                _uiState.update { it.copy(pageInput = page.toString()) }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                _uiState.update { it.copy(actionError = "Беттерді сақтау мүмкін болмады. Қайта көріңіз.") }
+            } finally {
+                _uiState.update { it.copy(isSaving = false) }
+            }
+        }
     }
 
     init {
@@ -46,4 +73,13 @@ class BookDetailsViewModel(
             }
         }
     }
+}
+
+/** Shared by the save action and its boundary tests; invalid input never reaches the repository. */
+internal fun pageInputError(value: String, totalPages: Int): String? {
+    val page = value.trim().toIntOrNull()
+        ?: return "Бүтін сан енгізіңіз"
+    return if (page !in 0..totalPages) {
+        "0 мен $totalPages аралығындағы санды енгізіңіз"
+    } else null
 }
