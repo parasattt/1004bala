@@ -1,6 +1,7 @@
 package com.example.a1004bala.ui.screens.details
 
 import com.example.a1004bala.data.model.Book
+import com.example.a1004bala.data.model.BookStatus
 import com.example.a1004bala.data.model.Quote
 
 data class BookDetailsUiState(
@@ -19,6 +20,10 @@ data class BookDetailsUiState(
     val quoteSaveError: String? = null,
     val deletingQuoteIds: Set<Int> = emptySet(),
     val quoteDeleteError: String? = null,
+    val isStatusSheetOpen: Boolean = false,
+    val selectedStatus: BookStatus? = null,
+    val isChangingStatus: Boolean = false,
+    val statusError: String? = null,
     val isSaving: Boolean = false,
     val actionError: String? = null
 )
