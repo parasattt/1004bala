@@ -30,19 +30,31 @@ import androidx.compose.ui.unit.dp
 import com.example.a1004bala.data.model.Book
 import com.example.a1004bala.data.model.BookStatus
 import com.example.a1004bala.ui.theme.BookWormTheme
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.semantics.Role
 
 @Composable
 fun BookCard(
     book: Book,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null
+
 ) {
     val coverColor = Color(book.coverColor)
     val coverTextColor = if (coverColor.luminance() > 0.179f) Color.Black else Color.White
 
     Card(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(CardDefaults.shape)
+            .combinedClickable(
+                role = Role.Button,
+                onClickLabel = "Кітапты ашу",
+                onLongClickLabel = if (onLongClick != null) "Кітапты жою" else null,
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
