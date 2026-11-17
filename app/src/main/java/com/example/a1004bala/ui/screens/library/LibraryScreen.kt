@@ -26,6 +26,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.example.a1004bala.data.model.Book
 @Composable
 fun LibraryScreen(
     onBookClick: (Int) -> Unit,
@@ -33,6 +39,32 @@ fun LibraryScreen(
     viewModel: LibraryViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var bookToDelete by remember { mutableStateOf<Book?>(null) }
+
+    bookToDelete?.let { book ->
+        AlertDialog(
+            onDismissRequest = { bookToDelete = null },
+            title = { Text("Кітапты жою") },
+            text = {
+                Text("«${book.title}» кітабы және оның дәйексөздері жойылады.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteBook(book.id)
+                        bookToDelete = null
+                    }
+                ) {
+                    Text("Жою", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { bookToDelete = null }) {
+                    Text("Бас тарту")
+                }
+            }
+        )
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -90,7 +122,8 @@ fun LibraryScreen(
                     ) { book ->
                         BookCard(
                             book = book,
-                            onClick = { onBookClick(book.id) }
+                            onClick = { onBookClick(book.id) },
+                            onLongClick = { bookToDelete = book }
                         )
                     }
                 }
