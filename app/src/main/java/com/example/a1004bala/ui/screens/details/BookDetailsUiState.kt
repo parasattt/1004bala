@@ -7,6 +7,8 @@ data class BookDetailsUiState(
     val book: Book? = null,
     val isLoading: Boolean = true,
     val quotes: List<Quote> = emptyList(),
+    val isQuotesLoading: Boolean = true,
+    val quotesLoadError: String? = null,
     val pageInput: String = "",
     val pageError: String? = null,
     val quoteInput: String = "",

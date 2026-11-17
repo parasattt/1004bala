@@ -2,6 +2,9 @@ package com.example.a1004bala.ui.screens.details
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -14,10 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
@@ -55,9 +56,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.a1004bala.data.model.Book
 import com.example.a1004bala.data.model.BookStatus
+import com.example.a1004bala.data.model.Quote
 import com.example.a1004bala.ui.AppViewModelProvider
 import com.example.a1004bala.ui.components.BookWormTopBar
 import com.example.a1004bala.ui.components.ReadingProgressBar
+import com.example.a1004bala.ui.components.QuoteItem
 import com.example.a1004bala.ui.theme.BookWormTheme
 
 @Composable
@@ -117,27 +120,98 @@ private fun BookDetailsContent(
                     textAlign = TextAlign.Center
                 )
             }
-            else -> Column(
+            else -> LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(contentPadding)
-                    .background(Brush.verticalGradient(listOf(headerColor, background, background)))
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                    .background(Brush.verticalGradient(listOf(headerColor, background, background))),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                BookDetailsHeader(book)
-                BookReadingSummary(book)
-                ReadingPageInput(
-                    value = state.pageInput,
-                    totalPages = book.totalPages,
-                    onValueChange = onPageInputChange,
-                    onSave = onSavePages,
-                    onStep = onStepPage,
-                    isSaving = state.isSaving,
-                    error = state.pageError,
-                    actionError = state.actionError
+                item(key = "book_header") { BookDetailsHeader(book) }
+                item(key = "reading_summary") { BookReadingSummary(book) }
+                item(key = "page_input") {
+                    ReadingPageInput(
+                        value = state.pageInput,
+                        totalPages = book.totalPages,
+                        onValueChange = onPageInputChange,
+                        onSave = onSavePages,
+                        onStep = onStepPage,
+                        isSaving = state.isSaving,
+                        error = state.pageError,
+                        actionError = state.actionError
+                    )
+                }
+                item(key = "quotes_heading") {
+                    QuotesHeading(
+                        count = if (state.isQuotesLoading || state.quotesLoadError != null) null else state.quotes.size
+                    )
+                }
+                when {
+                    state.isQuotesLoading -> item(key = "quotes_loading") {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            Text("Дәйексөздер жүктелуде…", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                    state.quotesLoadError != null -> item(key = "quotes_error") {
+                        Text(
+                            text = state.quotesLoadError,
+                            modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    state.quotes.isEmpty() -> item(key = "quotes_empty") {
+                        Text(
+                            text = "Әзірге дәйексөз жоқ",
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    else -> items(state.quotes, key = { it.id }) { quote ->
+                        QuoteItem(
+                            quote = quote,
+                            onDelete = {},
+                            highlighted = quote.id == state.quotes.firstOrNull()?.id,
+                            deleteEnabled = false
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuotesHeading(count: Int?) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Дәйексөздер",
+            modifier = Modifier.semantics { heading() },
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        if (count != null) {
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+            ) {
+                Text(
+                    text = count.toString(),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                    style = MaterialTheme.typography.labelMedium
                 )
             }
         }
@@ -473,6 +547,11 @@ private fun BookDetailsPageErrorPreview() {
 
 private fun headerPreviewState() = BookDetailsUiState(
     isLoading = false,
+    isQuotesLoading = false,
+    quotes = listOf(
+        Quote(1, bookId = 1, text = "Ғылым таппай мақтанба, орын таппай баптанба.", page = 12),
+        Quote(2, bookId = 1, text = "Еңбек етсең ерінбей, тояды қарның тіленбей.", page = 45)
+    ),
     pageInput = "120",
     book = Book(
         id = 1,
