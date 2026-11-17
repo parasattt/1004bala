@@ -1,27 +1,236 @@
 package com.example.a1004bala.ui.screens.details
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.a1004bala.data.model.Book
+import com.example.a1004bala.data.model.BookStatus
 import com.example.a1004bala.ui.AppViewModelProvider
+import com.example.a1004bala.ui.components.BookWormTopBar
+import com.example.a1004bala.ui.theme.BookWormTheme
 
 @Composable
 fun BookDetailsScreen(
     onBack: () -> Unit,
     viewModel: BookDetailsViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-    // TODO: реализовать экран книги
-    Column(
-        Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("BookDetailsScreen (заглушка)")
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    BookDetailsContent(state = state, onBack = onBack)
+}
+
+@Composable
+private fun BookDetailsContent(
+    state: BookDetailsUiState,
+    onBack: () -> Unit
+) {
+    val background = MaterialTheme.colorScheme.background
+    val book = state.book
+    val headerColor = book?.let { lerp(background, Color(it.coverColor), 0.30f) } ?: background
+
+    Scaffold(
+        containerColor = background,
+        topBar = {
+            BookWormTopBar(
+                title = if (book == null) "Кітап туралы" else null,
+                canNavigateBack = true,
+                onBack = onBack,
+                containerColor = headerColor
+            )
+        }
+    ) { contentPadding ->
+        when {
+            state.isLoading -> Box(
+                Modifier.fillMaxSize().padding(contentPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+            book == null -> Box(
+                Modifier.fillMaxSize().padding(contentPadding).padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = state.actionError ?: "Кітап табылмады",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+            else -> Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding)
+                    .background(Brush.verticalGradient(listOf(headerColor, background, background)))
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                BookDetailsHeader(book)
+            }
+        }
     }
 }
+
+@Composable
+private fun BookDetailsHeader(book: Book) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        DetailsBookCover(book)
+        Text(
+            text = book.title,
+            modifier = Modifier.padding(top = 12.dp).semantics { heading() },
+            style = MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = "${book.author} · ${book.totalPages} бет",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        BookStatusLabel(book.status)
+    }
+}
+
+@Composable
+private fun DetailsBookCover(book: Book) {
+    val coverColor = Color(book.coverColor)
+    Surface(
+        modifier = Modifier.size(width = 124.dp, height = 186.dp),
+        shape = RoundedCornerShape(topStart = 5.dp, bottomStart = 5.dp, topEnd = 10.dp, bottomEnd = 10.dp),
+        color = coverColor,
+        shadowElevation = 12.dp
+    ) {
+        Box(
+            Modifier.background(
+                Brush.linearGradient(listOf(lerp(coverColor, Color.White, 0.12f), coverColor, lerp(coverColor, Color.Black, 0.35f)))
+            )
+        ) {
+            Box(
+                Modifier.fillMaxSize().background(
+                    Brush.horizontalGradient(
+                        0f to Color.Black.copy(alpha = 0.25f),
+                        0.06f to Color.White.copy(alpha = 0.10f),
+                        0.09f to Color.Transparent
+                    )
+                )
+            )
+            Column(
+                modifier = Modifier.fillMaxSize().padding(start = 20.dp, end = 12.dp, top = 24.dp, bottom = 18.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = book.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = book.author,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontSize = 9.sp,
+                    letterSpacing = 0.5.sp,
+                    color = Color.White.copy(alpha = 0.85f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BookStatusLabel(status: BookStatus) {
+    val colors = MaterialTheme.colorScheme
+    val (container, content) = when (status) {
+        BookStatus.READING -> colors.primaryContainer to colors.onPrimaryContainer
+        BookStatus.FINISHED -> colors.secondaryContainer to colors.onSecondaryContainer
+        BookStatus.PLANNED -> colors.tertiaryContainer to colors.onTertiaryContainer
+    }
+    Surface(shape = CircleShape, color = container, contentColor = content) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Box(Modifier.size(7.dp).background(content, CircleShape))
+            Text(text = status.label, style = MaterialTheme.typography.labelMedium)
+        }
+    }
+}
+
+@Preview(name = "Book header · light", widthDp = 360, heightDp = 760, showBackground = true)
+@Composable
+private fun BookDetailsHeaderLightPreview() {
+    BookWormTheme(darkTheme = false) {
+        BookDetailsContent(state = headerPreviewState(), onBack = {})
+    }
+}
+
+@Preview(name = "Book header · dark", widthDp = 360, heightDp = 760, showBackground = true)
+@Composable
+private fun BookDetailsHeaderDarkPreview() {
+    BookWormTheme(darkTheme = true) {
+        BookDetailsContent(state = headerPreviewState(), onBack = {})
+    }
+}
+
+@Preview(name = "Book not found", widthDp = 360, heightDp = 760, showBackground = true)
+@Composable
+private fun BookDetailsMissingPreview() {
+    BookWormTheme {
+        BookDetailsContent(state = BookDetailsUiState(isLoading = false), onBack = {})
+    }
+}
+
+private fun headerPreviewState() = BookDetailsUiState(
+    isLoading = false,
+    book = Book(
+        id = 1,
+        title = "Абай жолы",
+        author = "Мұхтар Әуезов",
+        totalPages = 540,
+        currentPage = 120,
+        status = BookStatus.READING,
+        coverColor = 0xFF2F6B50
+    )
+)
