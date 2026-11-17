@@ -22,6 +22,10 @@ import com.example.a1004bala.ui.AppViewModelProvider
 import com.example.a1004bala.ui.components.BookCard
 import com.example.a1004bala.ui.components.EmptyState
 import com.example.a1004bala.ui.components.StatusTabs
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
 @Composable
 fun LibraryScreen(
     onBookClick: (Int) -> Unit,
@@ -31,7 +35,23 @@ fun LibraryScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        floatingActionButton = {
+            if (uiState.books.isNotEmpty()) {
+                ExtendedFloatingActionButton(
+                    onClick = onAddClick,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = null
+                        )
+                    },
+                    text = { Text("Кітап қосу") },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -61,7 +81,7 @@ fun LibraryScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(bottom = 16.dp),
+                    contentPadding = PaddingValues(bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(
