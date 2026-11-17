@@ -17,11 +17,18 @@ class BookDetailsViewModel(
     private val repository: BookRepository
 ) : ViewModel() {
     private val bookId: Int? = savedStateHandle["bookId"]
-    private val _uiState = MutableStateFlow(BookDetailsUiState())
+    private val _uiState = MutableStateFlow(
+        BookDetailsUiState(
+            pageInput = savedStateHandle.get<String>(PAGE_DRAFT).orEmpty(),
+            quoteInput = savedStateHandle.get<String>(QUOTE_DRAFT).orEmpty(),
+            quotePageInput = savedStateHandle.get<String>(QUOTE_PAGE_DRAFT).orEmpty()
+        )
+    )
     val uiState = _uiState.asStateFlow()
 
     fun onPageInputChange(value: String) {
         if (_uiState.value.isSaving || _uiState.value.isChangingStatus) return
+        savedStateHandle[PAGE_DRAFT] = value
         _uiState.update { it.copy(pageInput = value, pageError = null) }
     }
 
@@ -55,6 +62,7 @@ class BookDetailsViewModel(
         viewModelScope.launch {
             try {
                 repository.updateCurrentPage(book.id, page)
+                savedStateHandle.remove<String>(PAGE_DRAFT)
                 _uiState.update { it.copy(pageInput = page.toString()) }
             } catch (error: CancellationException) {
                 throw error
@@ -68,11 +76,13 @@ class BookDetailsViewModel(
 
     fun onQuoteInputChange(value: String) {
         if (_uiState.value.isAddingQuote) return
+        savedStateHandle[QUOTE_DRAFT] = value
         _uiState.update { it.copy(quoteInput = value, quoteError = null, quoteSaveError = null) }
     }
 
     fun onQuotePageInputChange(value: String) {
         if (_uiState.value.isAddingQuote) return
+        savedStateHandle[QUOTE_PAGE_DRAFT] = value
         _uiState.update { it.copy(quotePageInput = value, quotePageError = null, quoteSaveError = null) }
     }
 
@@ -92,6 +102,8 @@ class BookDetailsViewModel(
         viewModelScope.launch {
             try {
                 repository.addQuote(book.id, text, page)
+                savedStateHandle.remove<String>(QUOTE_DRAFT)
+                savedStateHandle.remove<String>(QUOTE_PAGE_DRAFT)
                 _uiState.update { it.copy(quoteInput = "", quotePageInput = "") }
             } catch (error: CancellationException) {
                 throw error
@@ -156,6 +168,7 @@ class BookDetailsViewModel(
         viewModelScope.launch {
             try {
                 repository.updateStatus(book.id, status)
+                if (status == BookStatus.FINISHED) savedStateHandle.remove<String>(PAGE_DRAFT)
                 _uiState.update {
                     it.copy(
                         isStatusSheetOpen = false,
@@ -190,7 +203,9 @@ class BookDetailsViewModel(
                             state.copy(
                                 book = book,
                                 isLoading = false,
-                                pageInput = if (state.book == null) book?.currentPage?.toString().orEmpty() else state.pageInput
+                                // A saved blank string is an intentional draft, not a missing value.
+                                pageInput = savedStateHandle.get<String>(PAGE_DRAFT)
+                                    ?: book?.currentPage?.toString().orEmpty()
                             )
                         }
                     }
@@ -210,6 +225,12 @@ class BookDetailsViewModel(
                     }
             }
         }
+    }
+
+    private companion object {
+        const val PAGE_DRAFT = "details.pageDraft"
+        const val QUOTE_DRAFT = "details.quoteDraft"
+        const val QUOTE_PAGE_DRAFT = "details.quotePageDraft"
     }
 }
 
