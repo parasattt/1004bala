@@ -19,6 +19,10 @@ class BookDetailsViewModel(
     private val _uiState = MutableStateFlow(BookDetailsUiState())
     val uiState = _uiState.asStateFlow()
 
+    fun onPageInputChange(value: String) {
+        _uiState.update { it.copy(pageInput = value, pageError = null) }
+    }
+
     init {
         val id = bookId
         if (id == null) {

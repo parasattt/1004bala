@@ -11,13 +11,18 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -28,6 +33,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -51,19 +59,25 @@ fun BookDetailsScreen(
     viewModel: BookDetailsViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    BookDetailsContent(state = state, onBack = onBack)
+    BookDetailsContent(
+        state = state,
+        onBack = onBack,
+        onPageInputChange = viewModel::onPageInputChange
+    )
 }
 
 @Composable
 private fun BookDetailsContent(
     state: BookDetailsUiState,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onPageInputChange: (String) -> Unit = {}
 ) {
     val background = MaterialTheme.colorScheme.background
     val book = state.book
     val headerColor = book?.let { lerp(background, Color(it.coverColor), 0.30f) } ?: background
 
     Scaffold(
+        modifier = Modifier.imePadding(),
         containerColor = background,
         topBar = {
             BookWormTopBar(
@@ -104,7 +118,70 @@ private fun BookDetailsContent(
             ) {
                 BookDetailsHeader(book)
                 BookReadingSummary(book)
+                ReadingPageInput(
+                    value = state.pageInput,
+                    totalPages = book.totalPages,
+                    onValueChange = onPageInputChange,
+                    enabled = !state.isSaving
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun ReadingPageInput(
+    value: String,
+    totalPages: Int,
+    onValueChange: (String) -> Unit,
+    enabled: Boolean
+) {
+    val focusManager = LocalFocusManager.current
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Қай беттесіз?",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = "0 – $totalPages",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = enabled,
+                label = { Text("Оқылған бет") },
+                suffix = { Text("бет") },
+                singleLine = true,
+                textStyle = MaterialTheme.typography.titleLarge,
+                shape = RoundedCornerShape(28.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                ),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+            )
         }
     }
 }
@@ -276,6 +353,7 @@ private fun BookDetailsMissingPreview() {
 
 private fun headerPreviewState() = BookDetailsUiState(
     isLoading = false,
+    pageInput = "120",
     book = Book(
         id = 1,
         title = "Абай жолы",
