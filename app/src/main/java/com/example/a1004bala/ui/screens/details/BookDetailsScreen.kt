@@ -1,6 +1,9 @@
 package com.example.a1004bala.ui.screens.details
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +27,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Button
 import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -32,6 +43,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -41,6 +53,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -78,7 +91,11 @@ fun BookDetailsScreen(
         onQuoteInputChange = viewModel::onQuoteInputChange,
         onQuotePageInputChange = viewModel::onQuotePageInputChange,
         onAddQuote = viewModel::addQuote,
-        onDeleteQuote = viewModel::deleteQuote
+        onDeleteQuote = viewModel::deleteQuote,
+        onOpenStatusSheet = viewModel::openStatusSheet,
+        onSelectStatus = viewModel::selectStatus,
+        onDismissStatusSheet = viewModel::dismissStatusSheet,
+        onConfirmStatus = viewModel::changeStatus
     )
 }
 
@@ -93,7 +110,11 @@ private fun BookDetailsContent(
     onQuoteInputChange: (String) -> Unit = {},
     onQuotePageInputChange: (String) -> Unit = {},
     onAddQuote: () -> Unit = {},
-    onDeleteQuote: (Int) -> Unit = {}
+    onDeleteQuote: (Int) -> Unit = {},
+    onOpenStatusSheet: () -> Unit = {},
+    onSelectStatus: (BookStatus) -> Unit = {},
+    onDismissStatusSheet: () -> Unit = {},
+    onConfirmStatus: () -> Unit = {}
 ) {
     val background = MaterialTheme.colorScheme.background
     val book = state.book
@@ -107,7 +128,18 @@ private fun BookDetailsContent(
                 title = if (book == null) "Кітап туралы" else null,
                 canNavigateBack = true,
                 onBack = onBack,
-                containerColor = headerColor
+                containerColor = headerColor,
+                actions = {
+                    if (book != null) {
+                        IconButton(
+                            onClick = onOpenStatusSheet,
+                            enabled = !state.isSaving && !state.isChangingStatus,
+                            modifier = Modifier.padding(end = 8.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                        ) {
+                            Icon(Icons.Filled.MoreVert, contentDescription = "Мәртебені өзгерту")
+                        }
+                    }
+                }
             )
         }
     ) { contentPadding ->
@@ -217,6 +249,109 @@ private fun BookDetailsContent(
                     }
                 }
             }
+        }
+    }
+    if (state.isStatusSheetOpen && book != null) {
+        StatusSelectionSheet(
+            selectedStatus = state.selectedStatus ?: book.status,
+            isSaving = state.isChangingStatus,
+            error = state.statusError,
+            onSelect = onSelectStatus,
+            onConfirm = onConfirmStatus,
+            onDismiss = onDismissStatusSheet
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StatusSelectionSheet(
+    selectedStatus: BookStatus,
+    isSaving: Boolean,
+    error: String?,
+    onSelect: (BookStatus) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val saving by rememberUpdatedState(isSaving)
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        confirmValueChange = { value -> value != SheetValue.Hidden || !saving }
+    )
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Text(
+                text = "Мәртебені өзгерту",
+                modifier = Modifier.semantics { heading() },
+                style = MaterialTheme.typography.titleLarge
+            )
+            Column(
+                modifier = Modifier.selectableGroup(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                BookStatus.tabOrder.forEach { status ->
+                    StatusOption(
+                        status = status,
+                        selected = status == selectedStatus,
+                        enabled = !isSaving,
+                        onClick = { onSelect(status) }
+                    )
+                }
+            }
+            if (error != null) {
+                Text(
+                    text = error,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            Button(
+                onClick = onConfirm,
+                enabled = !isSaving,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
+            ) {
+                Text(if (isSaving) "Сақталуда…" else "Дайын")
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatusOption(status: BookStatus, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.5.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+    ) {
+        Row(
+            modifier = Modifier
+                .selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(status.label, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = when (status) {
+                        BookStatus.READING -> "Қазір оқып жатырмын"
+                        BookStatus.FINISHED -> "Соңына дейін оқылды"
+                        BookStatus.PLANNED -> "Кейін оқимын"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            RadioButton(selected = selected, onClick = null, enabled = enabled)
         }
     }
 }
@@ -687,6 +822,18 @@ private fun QuoteInputErrorPreview() {
             onPageChange = {},
             onAdd = {}
         )
+    }
+}
+
+@Preview(name = "Status options · light", widthDp = 360, showBackground = true)
+@Composable
+private fun StatusOptionsPreview() {
+    BookWormTheme(darkTheme = false) {
+        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            BookStatus.tabOrder.forEach { status ->
+                StatusOption(status = status, selected = status == BookStatus.READING, enabled = true, onClick = {})
+            }
+        }
     }
 }
 

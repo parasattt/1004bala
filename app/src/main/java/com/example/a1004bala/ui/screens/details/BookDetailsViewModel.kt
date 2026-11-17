@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.a1004bala.data.repository.BookRepository
+import com.example.a1004bala.data.model.BookStatus
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +21,7 @@ class BookDetailsViewModel(
     val uiState = _uiState.asStateFlow()
 
     fun onPageInputChange(value: String) {
-        if (_uiState.value.isSaving) return
+        if (_uiState.value.isSaving || _uiState.value.isChangingStatus) return
         _uiState.update { it.copy(pageInput = value, pageError = null) }
     }
 
@@ -28,7 +29,7 @@ class BookDetailsViewModel(
     fun stepPage(delta: Int) {
         val state = _uiState.value
         val book = state.book ?: return
-        if (state.isSaving) return
+        if (state.isSaving || state.isChangingStatus) return
         val page = state.pageInput.trim().toIntOrNull() ?: return
         if (page !in 0..book.totalPages) return
         val nextPage = when {
@@ -42,7 +43,7 @@ class BookDetailsViewModel(
     fun updatePages() {
         val state = _uiState.value
         val book = state.book ?: return
-        if (state.isSaving) return
+        if (state.isSaving || state.isChangingStatus) return
 
         val error = pageInputError(state.pageInput, book.totalPages)
         if (error != null) {
@@ -120,6 +121,55 @@ class BookDetailsViewModel(
                 _uiState.update { it.copy(quoteDeleteError = "Дәйексөзді жою мүмкін болмады. Қайта көріңіз.") }
             } finally {
                 _uiState.update { it.copy(deletingQuoteIds = it.deletingQuoteIds - quoteId) }
+            }
+        }
+    }
+
+    fun openStatusSheet() {
+        val state = _uiState.value
+        val book = state.book ?: return
+        if (state.isSaving || state.isChangingStatus) return
+        _uiState.update { it.copy(isStatusSheetOpen = true, selectedStatus = book.status, statusError = null) }
+    }
+
+    fun selectStatus(status: BookStatus) {
+        val state = _uiState.value
+        if (!state.isStatusSheetOpen || state.isChangingStatus) return
+        _uiState.update { it.copy(selectedStatus = status, statusError = null) }
+    }
+
+    fun dismissStatusSheet() {
+        if (_uiState.value.isChangingStatus) return
+        _uiState.update { it.copy(isStatusSheetOpen = false, selectedStatus = null, statusError = null) }
+    }
+
+    fun changeStatus() {
+        val state = _uiState.value
+        val book = state.book ?: return
+        val status = state.selectedStatus ?: return
+        if (!state.isStatusSheetOpen || state.isChangingStatus || state.isSaving) return
+        if (status == book.status) {
+            dismissStatusSheet()
+            return
+        }
+        _uiState.update { it.copy(isChangingStatus = true, statusError = null) }
+        viewModelScope.launch {
+            try {
+                repository.updateStatus(book.id, status)
+                _uiState.update {
+                    it.copy(
+                        isStatusSheetOpen = false,
+                        selectedStatus = null,
+                        pageInput = if (status == BookStatus.FINISHED) book.totalPages.toString() else it.pageInput,
+                        pageError = if (status == BookStatus.FINISHED) null else it.pageError
+                    )
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                _uiState.update { it.copy(statusError = "Мәртебені сақтау мүмкін болмады. Қайта көріңіз.") }
+            } finally {
+                _uiState.update { it.copy(isChangingStatus = false) }
             }
         }
     }
