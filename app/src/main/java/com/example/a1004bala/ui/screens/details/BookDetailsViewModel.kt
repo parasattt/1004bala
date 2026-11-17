@@ -102,6 +102,28 @@ class BookDetailsViewModel(
         }
     }
 
+    fun deleteQuote(quoteId: Int) {
+        val state = _uiState.value
+        val book = state.book ?: return
+        if (quoteId in state.deletingQuoteIds) return
+        // Repository deletion accepts a global ID; only expose quotes of this book.
+        if (state.quotes.none { it.id == quoteId && it.bookId == book.id }) return
+        _uiState.update {
+            it.copy(deletingQuoteIds = it.deletingQuoteIds + quoteId, quoteDeleteError = null)
+        }
+        viewModelScope.launch {
+            try {
+                repository.deleteQuote(quoteId)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                _uiState.update { it.copy(quoteDeleteError = "Дәйексөзді жою мүмкін болмады. Қайта көріңіз.") }
+            } finally {
+                _uiState.update { it.copy(deletingQuoteIds = it.deletingQuoteIds - quoteId) }
+            }
+        }
+    }
+
     init {
         val id = bookId
         if (id == null) {

@@ -77,7 +77,8 @@ fun BookDetailsScreen(
         onStepPage = viewModel::stepPage,
         onQuoteInputChange = viewModel::onQuoteInputChange,
         onQuotePageInputChange = viewModel::onQuotePageInputChange,
-        onAddQuote = viewModel::addQuote
+        onAddQuote = viewModel::addQuote,
+        onDeleteQuote = viewModel::deleteQuote
     )
 }
 
@@ -91,7 +92,8 @@ private fun BookDetailsContent(
     onStepPage: (Int) -> Unit = {},
     onQuoteInputChange: (String) -> Unit = {},
     onQuotePageInputChange: (String) -> Unit = {},
-    onAddQuote: () -> Unit = {}
+    onAddQuote: () -> Unit = {},
+    onDeleteQuote: (Int) -> Unit = {}
 ) {
     val background = MaterialTheme.colorScheme.background
     val book = state.book
@@ -168,6 +170,16 @@ private fun BookDetailsContent(
                         onAdd = onAddQuote
                     )
                 }
+                if (state.quoteDeleteError != null) {
+                    item(key = "quote_delete_error") {
+                        Text(
+                            text = state.quoteDeleteError,
+                            modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
                 when {
                     state.isQuotesLoading -> item(key = "quotes_loading") {
                         Row(
@@ -198,9 +210,9 @@ private fun BookDetailsContent(
                     else -> items(state.quotes, key = { it.id }) { quote ->
                         QuoteItem(
                             quote = quote,
-                            onDelete = {},
+                            onDelete = { onDeleteQuote(quote.id) },
                             highlighted = quote.id == state.quotes.firstOrNull()?.id,
-                            deleteEnabled = false
+                            deleteEnabled = quote.id !in state.deletingQuoteIds
                         )
                     }
                 }
