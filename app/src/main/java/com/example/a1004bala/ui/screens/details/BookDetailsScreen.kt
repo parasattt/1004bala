@@ -4,10 +4,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -39,6 +42,7 @@ import com.example.a1004bala.data.model.Book
 import com.example.a1004bala.data.model.BookStatus
 import com.example.a1004bala.ui.AppViewModelProvider
 import com.example.a1004bala.ui.components.BookWormTopBar
+import com.example.a1004bala.ui.components.ReadingProgressBar
 import com.example.a1004bala.ui.theme.BookWormTheme
 
 @Composable
@@ -100,7 +104,55 @@ private fun BookDetailsContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 BookDetailsHeader(book)
+                BookReadingSummary(book)
             }
+        }
+    }
+}
+
+@Composable
+private fun BookReadingSummary(book: Book) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Surface(
+            modifier = Modifier.weight(1.15f).fillMaxHeight(),
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Box(modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center) {
+                ReadingProgressBar(progress = book.progress, percent = book.progressPercent)
+            }
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            PageCountTile(count = book.currentPage, label = "оқылған бет")
+            PageCountTile(count = book.pagesLeft, label = "бет қалды")
+        }
+    }
+}
+
+@Composable
+private fun PageCountTile(count: Int, label: String) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Text(
+                text = count.toString(),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
