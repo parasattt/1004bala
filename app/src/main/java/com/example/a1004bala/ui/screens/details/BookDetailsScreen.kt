@@ -22,6 +22,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Button
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -39,6 +40,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -67,7 +70,8 @@ fun BookDetailsScreen(
         state = state,
         onBack = onBack,
         onPageInputChange = viewModel::onPageInputChange,
-        onSavePages = viewModel::updatePages
+        onSavePages = viewModel::updatePages,
+        onStepPage = viewModel::stepPage
     )
 }
 
@@ -76,7 +80,8 @@ private fun BookDetailsContent(
     state: BookDetailsUiState,
     onBack: () -> Unit,
     onPageInputChange: (String) -> Unit = {},
-    onSavePages: () -> Unit = {}
+    onSavePages: () -> Unit = {},
+    onStepPage: (Int) -> Unit = {}
 ) {
     val background = MaterialTheme.colorScheme.background
     val book = state.book
@@ -129,6 +134,7 @@ private fun BookDetailsContent(
                     totalPages = book.totalPages,
                     onValueChange = onPageInputChange,
                     onSave = onSavePages,
+                    onStep = onStepPage,
                     isSaving = state.isSaving,
                     error = state.pageError,
                     actionError = state.actionError
@@ -144,11 +150,14 @@ private fun ReadingPageInput(
     totalPages: Int,
     onValueChange: (String) -> Unit,
     onSave: () -> Unit,
+    onStep: (Int) -> Unit,
     isSaving: Boolean,
     error: String?,
     actionError: String?
 ) {
     val focusManager = LocalFocusManager.current
+    val page = value.trim().toIntOrNull()
+    val validPage = page != null && page in 0..totalPages
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -185,8 +194,24 @@ private fun ReadingPageInput(
                 }) else null,
                 label = { Text("Оқылған бет") },
                 suffix = { Text("бет") },
+                leadingIcon = {
+                    PageStepButton(
+                        symbol = "−",
+                        description = "Бір бетке азайту",
+                        enabled = !isSaving && validPage && page > 0,
+                        onClick = { onStep(-1) }
+                    )
+                },
+                trailingIcon = {
+                    PageStepButton(
+                        symbol = "+",
+                        description = "Бір бетке көбейту",
+                        enabled = !isSaving && validPage && page < totalPages,
+                        onClick = { onStep(1) }
+                    )
+                },
                 singleLine = true,
-                textStyle = MaterialTheme.typography.titleLarge,
+                textStyle = MaterialTheme.typography.titleLarge.copy(textAlign = TextAlign.Center),
                 shape = RoundedCornerShape(28.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -233,6 +258,35 @@ private fun ReadingPageInput(
                     }
                     Text(if (isSaving) "Сақталуда…" else "Сақтау")
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PageStepButton(
+    symbol: String,
+    description: String,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    IconButton(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier.size(48.dp).semantics { contentDescription = description }
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surface,
+            contentColor = if (enabled) MaterialTheme.colorScheme.onSurface
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+        ) {
+            Box(modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center) {
+                Text(
+                    text = symbol,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.clearAndSetSemantics { }
+                )
             }
         }
     }

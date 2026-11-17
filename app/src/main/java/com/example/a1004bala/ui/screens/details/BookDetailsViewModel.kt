@@ -24,6 +24,20 @@ class BookDetailsViewModel(
         _uiState.update { it.copy(pageInput = value, pageError = null) }
     }
 
+    fun stepPage(delta: Int) {
+        val state = _uiState.value
+        val book = state.book ?: return
+        if (state.isSaving) return
+        val page = state.pageInput.trim().toIntOrNull() ?: return
+        if (page !in 0..book.totalPages) return
+        val nextPage = when {
+            delta == 1 && page < book.totalPages -> page + 1
+            delta == -1 && page > 0 -> page - 1
+            else -> return
+        }
+        onPageInputChange(nextPage.toString())
+    }
+
     fun updatePages() {
         val state = _uiState.value
         val book = state.book ?: return
