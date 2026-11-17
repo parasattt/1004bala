@@ -7,15 +7,18 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.a1004bala.data.repository.BookRepository
 import com.example.a1004bala.BookWormApp
+import com.example.a1004bala.ui.screens.addbook.AddBookViewModel
+import com.example.a1004bala.ui.screens.details.BookDetailsViewModel
+import com.example.a1004bala.ui.screens.library.LibraryViewModel
 
 
-class AppViewModelProvider {
+object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer {
             LibraryViewModel(bookWormApp().container.bookRepository)
         }
         initializer {
-            BooksDetailsViewModel(
+            BookDetailsViewModel(
                 savedStateHandle = createSavedStateHandle(),
                 repository = bookWormApp().container.bookRepository
             )
