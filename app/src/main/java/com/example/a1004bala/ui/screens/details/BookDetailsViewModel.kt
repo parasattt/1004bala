@@ -65,6 +65,43 @@ class BookDetailsViewModel(
         }
     }
 
+    fun onQuoteInputChange(value: String) {
+        if (_uiState.value.isAddingQuote) return
+        _uiState.update { it.copy(quoteInput = value, quoteError = null, quoteSaveError = null) }
+    }
+
+    fun onQuotePageInputChange(value: String) {
+        if (_uiState.value.isAddingQuote) return
+        _uiState.update { it.copy(quotePageInput = value, quotePageError = null, quoteSaveError = null) }
+    }
+
+    fun addQuote() {
+        val state = _uiState.value
+        val book = state.book ?: return
+        if (state.isAddingQuote) return
+        val textError = quoteTextError(state.quoteInput)
+        val pageError = quotePageInputError(state.quotePageInput, book.totalPages)
+        if (textError != null || pageError != null) {
+            _uiState.update { it.copy(quoteError = textError, quotePageError = pageError, quoteSaveError = null) }
+            return
+        }
+        val text = state.quoteInput.trim()
+        val page = state.quotePageInput.trim().toIntOrNull()
+        _uiState.update { it.copy(isAddingQuote = true, quoteError = null, quotePageError = null, quoteSaveError = null) }
+        viewModelScope.launch {
+            try {
+                repository.addQuote(book.id, text, page)
+                _uiState.update { it.copy(quoteInput = "", quotePageInput = "") }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                _uiState.update { it.copy(quoteSaveError = "Дәйексөзді сақтау мүмкін болмады. Қайта көріңіз.") }
+            } finally {
+                _uiState.update { it.copy(isAddingQuote = false) }
+            }
+        }
+    }
+
     init {
         val id = bookId
         if (id == null) {
@@ -110,5 +147,17 @@ internal fun pageInputError(value: String, totalPages: Int): String? {
         ?: return "Бүтін сан енгізіңіз"
     return if (page !in 0..totalPages) {
         "0 мен $totalPages аралығындағы санды енгізіңіз"
+    } else null
+}
+
+internal fun quoteTextError(value: String): String? =
+    if (value.isBlank()) "Дәйексөз мәтінін енгізіңіз" else null
+
+/** Quote page numbers start at 1; a blank value means the page is unspecified. */
+internal fun quotePageInputError(value: String, totalPages: Int): String? {
+    if (value.isBlank()) return null
+    val page = value.trim().toIntOrNull() ?: return "Бүтін сан енгізіңіз"
+    return if (page !in 1..totalPages) {
+        "1 мен $totalPages аралығындағы санды енгізіңіз"
     } else null
 }

@@ -16,6 +16,8 @@ data class BookDetailsUiState(
     val quotePageInput: String = "",
     val quoteError: String? = null,
     val quotePageError: String? = null,
+    val isAddingQuote: Boolean = false,
+    val quoteSaveError: String? = null,
     val isSaving: Boolean = false,
     val actionError: String? = null
 )
