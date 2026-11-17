@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -20,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -37,6 +39,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -62,7 +66,8 @@ fun BookDetailsScreen(
     BookDetailsContent(
         state = state,
         onBack = onBack,
-        onPageInputChange = viewModel::onPageInputChange
+        onPageInputChange = viewModel::onPageInputChange,
+        onSavePages = viewModel::updatePages
     )
 }
 
@@ -70,7 +75,8 @@ fun BookDetailsScreen(
 private fun BookDetailsContent(
     state: BookDetailsUiState,
     onBack: () -> Unit,
-    onPageInputChange: (String) -> Unit = {}
+    onPageInputChange: (String) -> Unit = {},
+    onSavePages: () -> Unit = {}
 ) {
     val background = MaterialTheme.colorScheme.background
     val book = state.book
@@ -122,7 +128,10 @@ private fun BookDetailsContent(
                     value = state.pageInput,
                     totalPages = book.totalPages,
                     onValueChange = onPageInputChange,
-                    enabled = !state.isSaving
+                    onSave = onSavePages,
+                    isSaving = state.isSaving,
+                    error = state.pageError,
+                    actionError = state.actionError
                 )
             }
         }
@@ -134,7 +143,10 @@ private fun ReadingPageInput(
     value: String,
     totalPages: Int,
     onValueChange: (String) -> Unit,
-    enabled: Boolean
+    onSave: () -> Unit,
+    isSaving: Boolean,
+    error: String?,
+    actionError: String?
 ) {
     val focusManager = LocalFocusManager.current
     Surface(
@@ -166,7 +178,11 @@ private fun ReadingPageInput(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = enabled,
+                enabled = !isSaving,
+                isError = error != null,
+                supportingText = if (error != null) ({
+                    Text(error, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                }) else null,
                 label = { Text("Оқылған бет") },
                 suffix = { Text("бет") },
                 singleLine = true,
@@ -180,8 +196,44 @@ private fun ReadingPageInput(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Done
                 ),
-                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+                keyboardActions = KeyboardActions(onDone = {
+                    if (!isSaving) {
+                        focusManager.clearFocus()
+                        onSave()
+                    }
+                })
             )
+            if (actionError != null) {
+                Text(
+                    text = actionError,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            Button(
+                onClick = {
+                    focusManager.clearFocus()
+                    onSave()
+                },
+                enabled = !isSaving,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                shape = CircleShape
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Text(if (isSaving) "Сақталуда…" else "Сақтау")
+                }
+            }
         }
     }
 }
@@ -348,6 +400,20 @@ private fun BookDetailsHeaderDarkPreview() {
 private fun BookDetailsMissingPreview() {
     BookWormTheme {
         BookDetailsContent(state = BookDetailsUiState(isLoading = false), onBack = {})
+    }
+}
+
+@Preview(name = "Page input · invalid range", widthDp = 360, heightDp = 760, showBackground = true)
+@Composable
+private fun BookDetailsPageErrorPreview() {
+    BookWormTheme(darkTheme = false) {
+        BookDetailsContent(
+            state = headerPreviewState().copy(
+                pageInput = "620",
+                pageError = pageInputError("620", 540)
+            ),
+            onBack = {}
+        )
     }
 }
 
