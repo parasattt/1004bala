@@ -20,7 +20,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** Runs against the Android main dispatcher; no extra Gradle dependencies are needed. */
 @RunWith(AndroidJUnit4::class)
 class BookDetailsViewModelTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -366,7 +365,6 @@ class BookDetailsViewModelTest {
 
     private enum class Operation { PAGES, ADD, DELETE, STATUS }
 
-    /** Uses real repository behavior, adding controllable failures and suspended writes. */
     private class ControlledRepository(
         private val delegate: BookRepository = InMemoryBookRepository()
     ) : BookRepository by delegate {

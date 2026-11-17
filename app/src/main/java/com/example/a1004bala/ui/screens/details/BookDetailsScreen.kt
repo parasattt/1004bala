@@ -99,7 +99,6 @@ fun BookDetailsScreen(
     )
 }
 
-/** Stateless content also renders in Preview without a navigation or repository instance. */
 @Composable
 private fun BookDetailsContent(
     state: BookDetailsUiState,

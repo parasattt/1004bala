@@ -4,7 +4,6 @@ import com.example.a1004bala.data.model.Book
 import com.example.a1004bala.data.model.BookStatus
 import com.example.a1004bala.data.model.Quote
 
-/** Immutable snapshot of the book details screen. Drafts are separate from saved data. */
 data class BookDetailsUiState(
     val book: Book? = null,
     val isLoading: Boolean = true,
