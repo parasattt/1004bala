@@ -66,7 +66,7 @@ fun AddBookScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Когда saveBook() выставил isSaved = true, возвращаемся назад на полку
+
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) onBack()
     }
@@ -106,7 +106,7 @@ private fun AddBookContent(
             )
         },
         bottomBar = {
-            // Кнопка закреплена внизу и поднимается над клавиатурой
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -193,7 +193,7 @@ private fun AddBookContent(
     }
 }
 
-/** Превью карточки: показывает, как книга будет выглядеть на полке. Обновляется по мере ввода. */
+
 @Composable
 private fun BookPreviewCard(
     title: String,
@@ -262,11 +262,7 @@ private fun BookPreviewCard(
     }
 }
 
-/**
- * Обложка в превью. Пока названия нет, рисуем пунктирную рамку.
- * Настоящий цвет обложки книга получит при сохранении (Book.coverColorFor(id)),
- * поэтому тут показан один фиксированный цвет.
- */
+
 @Composable
 private fun PreviewCover(title: String) {
     val outline = MaterialTheme.colorScheme.outline
