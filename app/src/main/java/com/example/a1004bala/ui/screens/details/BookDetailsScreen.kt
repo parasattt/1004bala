@@ -74,7 +74,10 @@ fun BookDetailsScreen(
         onBack = onBack,
         onPageInputChange = viewModel::onPageInputChange,
         onSavePages = viewModel::updatePages,
-        onStepPage = viewModel::stepPage
+        onStepPage = viewModel::stepPage,
+        onQuoteInputChange = viewModel::onQuoteInputChange,
+        onQuotePageInputChange = viewModel::onQuotePageInputChange,
+        onAddQuote = viewModel::addQuote
     )
 }
 
@@ -84,7 +87,10 @@ private fun BookDetailsContent(
     onBack: () -> Unit,
     onPageInputChange: (String) -> Unit = {},
     onSavePages: () -> Unit = {},
-    onStepPage: (Int) -> Unit = {}
+    onStepPage: (Int) -> Unit = {},
+    onQuoteInputChange: (String) -> Unit = {},
+    onQuotePageInputChange: (String) -> Unit = {},
+    onAddQuote: () -> Unit = {}
 ) {
     val background = MaterialTheme.colorScheme.background
     val book = state.book
@@ -148,6 +154,19 @@ private fun BookDetailsContent(
                         count = if (state.isQuotesLoading || state.quotesLoadError != null) null else state.quotes.size
                     )
                 }
+                item(key = "quote_input") {
+                    QuoteInputForm(
+                        text = state.quoteInput,
+                        page = state.quotePageInput,
+                        textError = state.quoteError,
+                        pageError = state.quotePageError,
+                        saveError = state.quoteSaveError,
+                        isAdding = state.isAddingQuote,
+                        onTextChange = onQuoteInputChange,
+                        onPageChange = onQuotePageInputChange,
+                        onAdd = onAddQuote
+                    )
+                }
                 when {
                     state.isQuotesLoading -> item(key = "quotes_loading") {
                         Row(
@@ -184,6 +203,101 @@ private fun BookDetailsContent(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuoteInputForm(
+    text: String,
+    page: String,
+    textError: String?,
+    pageError: String?,
+    saveError: String?,
+    isAdding: Boolean,
+    onTextChange: (String) -> Unit,
+    onPageChange: (String) -> Unit,
+    onAdd: () -> Unit
+) {
+    val focusManager = LocalFocusManager.current
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedTextField(
+                value = text,
+                onValueChange = onTextChange,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isAdding,
+                label = { Text("Дәйексөз") },
+                placeholder = { Text("Дәйексөз қосу…") },
+                minLines = 2,
+                maxLines = 5,
+                shape = RoundedCornerShape(16.dp),
+                isError = textError != null,
+                supportingText = if (textError != null) ({
+                    Text(textError, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                }) else null
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                OutlinedTextField(
+                    value = page,
+                    onValueChange = onPageChange,
+                    modifier = Modifier.weight(1f),
+                    enabled = !isAdding,
+                    label = { Text("Бет") },
+                    placeholder = { Text("Міндетті емес") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                    isError = pageError != null,
+                    supportingText = if (pageError != null) ({
+                        Text(pageError, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                    }) else null,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        if (!isAdding) {
+                            focusManager.clearFocus()
+                            onAdd()
+                        }
+                    })
+                )
+                Button(
+                    onClick = {
+                        focusManager.clearFocus()
+                        onAdd()
+                    },
+                    enabled = !isAdding,
+                    modifier = Modifier.padding(top = 8.dp).heightIn(min = 52.dp),
+                    shape = CircleShape
+                ) {
+                    if (isAdding) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        Text("Қосу")
+                    }
+                }
+            }
+            if (saveError != null) {
+                Text(
+                    text = saveError,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
             }
         }
     }
@@ -541,6 +655,24 @@ private fun BookDetailsPageErrorPreview() {
                 pageError = pageInputError("620", 540)
             ),
             onBack = {}
+        )
+    }
+}
+
+@Preview(name = "Quote form · validation errors", widthDp = 360, showBackground = true)
+@Composable
+private fun QuoteInputErrorPreview() {
+    BookWormTheme(darkTheme = false) {
+        QuoteInputForm(
+            text = "",
+            page = "541",
+            textError = quoteTextError(""),
+            pageError = quotePageInputError("541", 540),
+            saveError = null,
+            isAdding = false,
+            onTextChange = {},
+            onPageChange = {},
+            onAdd = {}
         )
     }
 }
