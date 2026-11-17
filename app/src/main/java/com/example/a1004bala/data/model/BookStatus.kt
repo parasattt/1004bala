@@ -6,6 +6,6 @@ enum class BookStatus(val label: String){
     FINISHED("Аяқталды");
 
     companion object{
-        val tabOrder: List<BookStatus> = listOf(PLANNED, READING, FINISHED)
+        val tabOrder: List<BookStatus> = listOf(READING, FINISHED, PLANNED)
     }
 }
