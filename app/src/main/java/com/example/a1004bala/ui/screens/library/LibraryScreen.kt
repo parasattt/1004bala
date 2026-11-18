@@ -2,6 +2,13 @@ package com.example.a1004bala.ui.screens.library
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import kotlinx.coroutines.launch
+import com.example.a1004bala.ui.components.LibraryNavButton
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +47,8 @@ fun LibraryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var bookToDelete by remember { mutableStateOf<Book?>(null) }
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
     bookToDelete?.let { book ->
         AlertDialog(
@@ -79,8 +88,9 @@ fun LibraryScreen(
                         )
                     },
                     text = { Text("Кітап қосу") },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    shape = CircleShape,
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
                 )
             }
         }
@@ -91,11 +101,26 @@ fun LibraryScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
-            Text(
-                text = "Менің сөрем",
-                modifier = Modifier.padding(vertical = 16.dp),
-                style = MaterialTheme.typography.headlineSmall
-            )
+            Row(
+                modifier = Modifier.padding(top = 12.dp, bottom = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Менің сөрем",
+                        style = MaterialTheme.typography.displaySmall
+                    )
+                    Text(
+                        text = "${uiState.counts.values.sum()} кітап",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                LibraryNavButton(
+                    selected = true,
+                    onClick = { scope.launch { listState.animateScrollToItem(0) } }
+                )
+            }
 
             StatusTabs(
                 selectedStatus = uiState.selectedStatus,
@@ -112,9 +137,10 @@ fun LibraryScreen(
                 )
             } else {
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(bottom = 96.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     items(
                         items = uiState.books,
