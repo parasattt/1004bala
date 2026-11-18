@@ -14,12 +14,6 @@ The app will help you:
 - Add and delete quotes from a book.
 - Add and delete books.
 
-## Project status
-
-The app is still in development. The `main` branch has the first project files. Some features are available in the `feature/library-screen` branch. The add book screen is not ready yet.
-
-In the development version, the app uses sample books. Changes are kept only while the app is running. They are lost when the app restarts.
-
 ## Tools
 
 - Kotlin
@@ -41,7 +35,6 @@ In the development version, the app uses sample books. Changes are kept only whi
 
    ```bash
    cd 1004bala
-   git checkout feature/library-screen
    ```
 
 4. Open the `1004bala` folder in Android Studio.
