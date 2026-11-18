@@ -7,7 +7,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class BookDetailsDraftRestorationTest {
-    // No route ID: these tests isolate draft persistence from asynchronous book loading.
     @Test
     fun restoresAllDraftFieldsFromSavedStateSnapshot() {
         val handle = SavedStateHandle()
