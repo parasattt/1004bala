@@ -1,5 +1,11 @@
-package com.example.a1004bala.ui.screens.addbook
+package com.example.a1004bala
 
+import com.example.a1004bala.ui.screens.addbook.ERROR_AUTHOR
+import com.example.a1004bala.ui.screens.addbook.ERROR_PAGES
+import com.example.a1004bala.ui.screens.addbook.ERROR_TITLE
+import com.example.a1004bala.ui.screens.addbook.validateAuthor
+import com.example.a1004bala.ui.screens.addbook.validatePages
+import com.example.a1004bala.ui.screens.addbook.validateTitle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
