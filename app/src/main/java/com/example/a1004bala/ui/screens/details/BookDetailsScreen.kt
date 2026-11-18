@@ -72,6 +72,7 @@ import com.example.a1004bala.data.model.BookStatus
 import com.example.a1004bala.data.model.Quote
 import com.example.a1004bala.ui.AppViewModelProvider
 import com.example.a1004bala.ui.components.BookWormTopBar
+import com.example.a1004bala.ui.components.LibraryNavButton
 import com.example.a1004bala.ui.components.ReadingProgressBar
 import com.example.a1004bala.ui.components.QuoteItem
 import com.example.a1004bala.ui.theme.BookWormTheme
@@ -79,12 +80,14 @@ import com.example.a1004bala.ui.theme.BookWormTheme
 @Composable
 fun BookDetailsScreen(
     onBack: () -> Unit,
+    onLibraryClick: () -> Unit = onBack,
     viewModel: BookDetailsViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     BookDetailsContent(
         state = state,
         onBack = onBack,
+        onLibraryClick = onLibraryClick,
         onPageInputChange = viewModel::onPageInputChange,
         onSavePages = viewModel::updatePages,
         onStepPage = viewModel::stepPage,
@@ -103,6 +106,7 @@ fun BookDetailsScreen(
 private fun BookDetailsContent(
     state: BookDetailsUiState,
     onBack: () -> Unit,
+    onLibraryClick: () -> Unit = {},
     onPageInputChange: (String) -> Unit = {},
     onSavePages: () -> Unit = {},
     onStepPage: (Int) -> Unit = {},
@@ -129,6 +133,10 @@ private fun BookDetailsContent(
                 onBack = onBack,
                 containerColor = headerColor,
                 actions = {
+                    LibraryNavButton(
+                        onClick = onLibraryClick,
+                        modifier = Modifier.padding(end = if (book != null) 4.dp else 8.dp)
+                    )
                     if (book != null) {
                         IconButton(
                             onClick = onOpenStatusSheet,

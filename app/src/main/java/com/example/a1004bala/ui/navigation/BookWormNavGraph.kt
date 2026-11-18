@@ -16,6 +16,10 @@ fun BookWormNavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
+    val goToLibrary: () -> Unit = {
+        navController.popBackStack(Screen.Library.route, inclusive = false)
+    }
+
     NavHost(
         navController = navController,
         startDestination = Screen.Library.route,
@@ -33,14 +37,20 @@ fun BookWormNavGraph(
         }
 
         composable(Screen.AddBook.route) {
-            AddBookScreen(onBack = { navController.popBackStack() })
+            AddBookScreen(
+                onBack = { navController.popBackStack() },
+                onLibraryClick = goToLibrary
+            )
         }
 
         composable(
             route = Screen.BookDetails.route,
             arguments = listOf(navArgument(Screen.BookDetails.ARG) { type = NavType.IntType })
         ) {
-            BookDetailsScreen(onBack = { navController.popBackStack() })
+            BookDetailsScreen(
+                onBack = { navController.popBackStack() },
+                onLibraryClick = goToLibrary
+            )
         }
     }
 }

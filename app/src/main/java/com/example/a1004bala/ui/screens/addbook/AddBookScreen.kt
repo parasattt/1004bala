@@ -54,6 +54,7 @@ import com.example.a1004bala.data.model.BookStatus
 import com.example.a1004bala.ui.AppViewModelProvider
 import com.example.a1004bala.ui.components.AppTextField
 import com.example.a1004bala.ui.components.BookWormTopBar
+import com.example.a1004bala.ui.components.LibraryNavButton
 import com.example.a1004bala.ui.components.StatusSelector
 import com.example.a1004bala.ui.components.statusStyle
 import com.example.a1004bala.ui.theme.BookWormTheme
@@ -62,6 +63,7 @@ import com.example.a1004bala.ui.theme.BookWormTheme
 @Composable
 fun AddBookScreen(
     onBack: () -> Unit,
+    onLibraryClick: () -> Unit = onBack,
     viewModel: AddBookViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -74,6 +76,7 @@ fun AddBookScreen(
     AddBookContent(
         state = state,
         onBack = onBack,
+        onLibraryClick = onLibraryClick,
         onTitleChange = viewModel::onTitleChange,
         onAuthorChange = viewModel::onAuthorChange,
         onPagesChange = viewModel::onPagesChange,
@@ -86,6 +89,7 @@ fun AddBookScreen(
 private fun AddBookContent(
     state: AddBookUiState,
     onBack: () -> Unit,
+    onLibraryClick: () -> Unit = {},
     onTitleChange: (String) -> Unit,
     onAuthorChange: (String) -> Unit,
     onPagesChange: (String) -> Unit,
@@ -102,7 +106,13 @@ private fun AddBookContent(
                 title = "Жаңа кітап",
                 canNavigateBack = true,
                 onBack = onBack,
-                navigationIcon = Icons.Filled.Close
+                navigationIcon = Icons.Filled.Close,
+                actions = {
+                    LibraryNavButton(
+                        onClick = onLibraryClick,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                }
             )
         },
         bottomBar = {
