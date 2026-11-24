@@ -10,13 +10,15 @@ import com.example.a1004bala.ui.screens.addbook.AddBookViewModel
 import com.example.a1004bala.ui.screens.details.BookDetailsViewModel
 import com.example.a1004bala.ui.screens.library.LibraryViewModel
 import com.example.a1004bala.ui.screens.search.SearchViewModel
-import com.example.a1004bala.ui.screens.search.SettingsViewModel
-
+import com.example.a1004bala.ui.screens.settings.SettingsViewModel
 
 object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer {
-            LibraryViewModel(bookWormApp().container.bookRepository, bookWormApp().container.userPreferences)
+            LibraryViewModel(
+                repository = bookWormApp().container.bookRepository,
+                preferences = bookWormApp().container.userPreferences
+            )
         }
         initializer {
             BookDetailsViewModel(
@@ -25,8 +27,11 @@ object AppViewModelProvider {
             )
         }
         initializer {
-            AddBookViewModel(createSavedStateHandle(),
-                bookWormApp().container.bookRepository, bookWormApp().container.booksRemoteRepository)
+            AddBookViewModel(
+                savedStateHandle = createSavedStateHandle(),
+                repository = bookWormApp().container.bookRepository,
+                remote = bookWormApp().container.booksRemoteRepository
+            )
         }
         initializer {
             SearchViewModel(bookWormApp().container.booksRemoteRepository)
@@ -36,5 +41,6 @@ object AppViewModelProvider {
         }
     }
 }
+
 fun CreationExtras.bookWormApp(): BookWormApp =
     this[APPLICATION_KEY] as BookWormApp
