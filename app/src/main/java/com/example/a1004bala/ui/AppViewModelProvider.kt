@@ -39,6 +39,9 @@ object AppViewModelProvider {
         initializer {
             SettingsViewModel(bookWormApp().container.userPreferences)
         }
+        initializer {
+            MainViewModel(bookWormApp().container.userPreferences)
+        }
     }
 }
 
