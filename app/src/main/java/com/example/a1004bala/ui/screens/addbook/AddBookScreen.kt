@@ -64,6 +64,7 @@ import com.example.a1004bala.ui.theme.BookWormTheme
 fun AddBookScreen(
     onBack: () -> Unit,
     onLibraryClick: () -> Unit = onBack,
+    onSearchClick: () -> Unit = {},
     viewModel: AddBookViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
