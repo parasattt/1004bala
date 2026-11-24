@@ -25,7 +25,7 @@ object AppViewModelProvider {
             )
         }
         initializer {
-            AddBookViewModel(bookWormApp().container.bookRepository,
+            AddBookViewModel(createSavedStateHandle(),
                 bookWormApp().container.bookRepository, bookWormApp().container.booksRemoteRepository)
         }
         initializer {
