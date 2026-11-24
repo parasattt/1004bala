@@ -5,11 +5,12 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.a1004bala.data.repository.BookRepository
 import com.example.a1004bala.BookWormApp
 import com.example.a1004bala.ui.screens.addbook.AddBookViewModel
 import com.example.a1004bala.ui.screens.details.BookDetailsViewModel
 import com.example.a1004bala.ui.screens.library.LibraryViewModel
+import com.example.a1004bala.ui.screens.search.SearchViewModel
+import com.example.a1004bala.ui.screens.search.SettingsViewModel
 
 
 object AppViewModelProvider {
@@ -25,6 +26,12 @@ object AppViewModelProvider {
         }
         initializer {
             AddBookViewModel(bookWormApp().container.bookRepository)
+        }
+        initializer {
+            SearchViewModel(bookWormApp().container.booksRemoteRepository)
+        }
+        initializer {
+            SettingsViewModel(bookWormApp().container.userPreferences)
         }
     }
 }
