@@ -1,9 +1,11 @@
 package com.example.a1004bala.ui.screens.addbook
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.a1004bala.data.model.BookStatus
 import com.example.a1004bala.data.repository.BookRepository
+import com.example.a1004bala.data.repository.BooksRemoteRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,7 +13,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AddBookViewModel(
-    private val repository: BookRepository
+    private val savedStateHandle: SavedStateHandle,
+    private val repository: BookRepository,
+    private val remote: BooksRemoteRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddBookUiState())

@@ -43,6 +43,8 @@ import com.example.a1004bala.data.model.Book
 fun LibraryScreen(
     onBookClick: (Int) -> Unit,
     onAddClick: () -> Unit,
+    onSearchClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
     viewModel: LibraryViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

@@ -10,6 +10,8 @@ import androidx.navigation.navArgument
 import com.example.a1004bala.ui.screens.addbook.AddBookScreen
 import com.example.a1004bala.ui.screens.details.BookDetailsScreen
 import com.example.a1004bala.ui.screens.library.LibraryScreen
+import com.example.a1004bala.ui.screens.search.SearchScreen
+import com.example.a1004bala.ui.screens.settings.SettingsScreen
 
 @Composable
 fun BookWormNavGraph(
@@ -18,6 +20,9 @@ fun BookWormNavGraph(
 ) {
     val goToLibrary: () -> Unit = {
         navController.popBackStack(Screen.Library.route, inclusive = false)
+    }
+    val openSearch: () -> Unit = {
+        navController.navigate(Screen.Search.route) { launchSingleTop = true }
     }
 
     NavHost(
@@ -31,15 +36,27 @@ fun BookWormNavGraph(
                     navController.navigate(Screen.BookDetails.createRoute(id))
                 },
                 onAddClick = {
-                    navController.navigate(Screen.AddBook.route) { launchSingleTop = true }
+                    navController.navigate(Screen.AddBook.createRoute()) { launchSingleTop = true }
+                },
+                onSearchClick = openSearch,
+                onSettingsClick = {
+                    navController.navigate(Screen.Settings.route) { launchSingleTop = true }
                 }
             )
         }
 
-        composable(Screen.AddBook.route) {
+        composable(
+            route = Screen.AddBook.route,
+            arguments = listOf(navArgument(Screen.AddBook.ARG) {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            })
+        ) {
             AddBookScreen(
                 onBack = { navController.popBackStack() },
-                onLibraryClick = goToLibrary
+                onLibraryClick = goToLibrary,
+                onSearchClick = openSearch
             )
         }
 
@@ -51,6 +68,19 @@ fun BookWormNavGraph(
                 onBack = { navController.popBackStack() },
                 onLibraryClick = goToLibrary
             )
+        }
+
+        composable(Screen.Search.route) {
+            SearchScreen(
+                onBack = { navController.popBackStack() },
+                onResultClick = { volumeId ->
+                    navController.navigate(Screen.AddBook.createRoute(volumeId))
+                }
+            )
+        }
+
+        composable(Screen.Settings.route) {
+            SettingsScreen(onBack = { navController.popBackStack() })
         }
     }
 }
