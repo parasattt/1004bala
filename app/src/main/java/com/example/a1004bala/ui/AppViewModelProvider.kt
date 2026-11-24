@@ -16,7 +16,7 @@ import com.example.a1004bala.ui.screens.search.SettingsViewModel
 object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer {
-            LibraryViewModel(bookWormApp().container.bookRepository)
+            LibraryViewModel(bookWormApp().container.bookRepository, bookWormApp().container.userPreferences)
         }
         initializer {
             BookDetailsViewModel(
@@ -25,7 +25,8 @@ object AppViewModelProvider {
             )
         }
         initializer {
-            AddBookViewModel(bookWormApp().container.bookRepository)
+            AddBookViewModel(bookWormApp().container.bookRepository,
+                bookWormApp().container.bookRepository, bookWormApp().container.booksRemoteRepository)
         }
         initializer {
             SearchViewModel(bookWormApp().container.booksRemoteRepository)
