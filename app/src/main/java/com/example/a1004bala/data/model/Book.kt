@@ -7,7 +7,8 @@ data class Book(
     val totalPages: Int,
     val currentPage: Int = 0,
     val status: BookStatus = BookStatus.PLANNED,
-    val coverColor: Long = coverColorFor(id)
+    val coverColor: Long = coverColorFor(id),
+    val coverUrl: String? = null,
 ){
     init {
         require(totalPages > 0) { "totalPages must be > 0" }

@@ -31,7 +31,8 @@ class InMemoryBookRepository: BookRepository{
         title: String,
         author: String,
         totalPages: Int,
-        status: BookStatus
+        status: BookStatus,
+        coverUrl: String?
     ): Int {
         val id = nextBookId.getAndIncrement()
         val book = Book(
@@ -40,7 +41,8 @@ class InMemoryBookRepository: BookRepository{
             author = author.trim(),
             totalPages = totalPages,
             currentPage = if (status == BookStatus.FINISHED) totalPages else 0,
-            status = status
+            status = status,
+            coverUrl = coverUrl
         )
         books.update { it + book }
         return id
