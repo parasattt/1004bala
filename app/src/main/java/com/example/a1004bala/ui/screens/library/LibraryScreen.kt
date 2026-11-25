@@ -18,6 +18,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -34,6 +39,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.a1004bala.ui.AppViewModelProvider
 import com.example.a1004bala.ui.components.BookCard
 import com.example.a1004bala.ui.components.EmptyState
+import com.example.a1004bala.ui.components.FinishedBookTile
 import com.example.a1004bala.ui.components.SortSheet
 import com.example.a1004bala.ui.components.StatusTabs
 import com.example.a1004bala.ui.components.TopBarIconButton
@@ -70,6 +76,7 @@ fun LibraryScreen(
     var bookToDelete by remember { mutableStateOf<Book?>(null) }
     var showSortSheet by rememberSaveable { mutableStateOf(false) }
     val listState = rememberLazyListState()
+    val finishedGridState = rememberLazyGridState()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -159,7 +166,17 @@ fun LibraryScreen(
                 }
                 LibraryNavButton(
                     selected = true,
-                    onClick = { scope.launch { listState.animateScrollToItem(0) } }
+                    onClick = {
+                        if (uiState.books.isNotEmpty()) {
+                            scope.launch {
+                                if (uiState.selectedStatus == BookStatus.FINISHED) {
+                                    finishedGridState.animateScrollToItem(0)
+                                } else {
+                                    listState.animateScrollToItem(0)
+                                }
+                            }
+                        }
+                    }
                 )
                 TopBarIconButton(
                     icon = Icons.Filled.Search,
@@ -195,6 +212,29 @@ fun LibraryScreen(
                     onAddClick = onAddClick,
                     modifier = Modifier.weight(1f)
                 )
+            } else if (uiState.selectedStatus == BookStatus.FINISHED) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    state = finishedGridState,
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(bottom = 96.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    item(key = "finished-summary", span = { GridItemSpan(maxLineSpan) }) {
+                        FinishedReadingSummary(
+                            bookCount = uiState.books.size,
+                            pagesRead = uiState.books.sumOf { it.currentPage.toLong() }
+                        )
+                    }
+                    items(items = uiState.books, key = { it.id }) { book ->
+                        FinishedBookTile(
+                            book = book,
+                            onClick = { onBookClick(book.id) },
+                            onLongClick = { bookToDelete = book }
+                        )
+                    }
+                }
             } else {
                 LazyColumn(
                     state = listState,
@@ -202,15 +242,6 @@ fun LibraryScreen(
                     contentPadding = PaddingValues(bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    if (uiState.selectedStatus == BookStatus.FINISHED) {
-                        item(key = "finished-summary") {
-                            FinishedReadingSummary(
-                                bookCount = uiState.books.size,
-                                pagesRead = uiState.books.sumOf { it.currentPage.toLong() }
-                            )
-                        }
-                    }
-
                     items(
                         items = uiState.books,
                         key = { book -> book.id }
