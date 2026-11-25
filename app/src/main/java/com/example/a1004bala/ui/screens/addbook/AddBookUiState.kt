@@ -19,6 +19,11 @@ data class AddBookUiState(
     val totalPages: String = "",
     val status: BookStatus = BookStatus.PLANNED,
     val errors: AddBookErrors = AddBookErrors(),
+    val coverUrl: String? = null,
+    val fromGoogleBooks: Boolean = false,
+    val pagesMissing: Boolean = false,
+    val isPrefilling: Boolean = false,
+    val prefillError: String? = null,
     val isSaving: Boolean = false,
     val isSaved: Boolean = false
 )
