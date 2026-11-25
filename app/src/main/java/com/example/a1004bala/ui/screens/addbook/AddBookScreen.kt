@@ -1,6 +1,7 @@
 package com.example.a1004bala.ui.screens.addbook
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,8 +21,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,6 +45,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -78,6 +86,7 @@ fun AddBookScreen(
         state = state,
         onBack = onBack,
         onLibraryClick = onLibraryClick,
+        onSearchClick = onSearchClick,
         onTitleChange = viewModel::onTitleChange,
         onAuthorChange = viewModel::onAuthorChange,
         onPagesChange = viewModel::onPagesChange,
@@ -91,6 +100,7 @@ private fun AddBookContent(
     state: AddBookUiState,
     onBack: () -> Unit,
     onLibraryClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {},
     onTitleChange: (String) -> Unit,
     onAuthorChange: (String) -> Unit,
     onPagesChange: (String) -> Unit,
@@ -129,7 +139,7 @@ private fun AddBookContent(
                         focusManager.clearFocus()
                         onSave()
                     },
-                    enabled = !state.isSaving,
+                    enabled = state.canSave,
                     shape = CircleShape,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -148,12 +158,38 @@ private fun AddBookContent(
                 .padding(top = 4.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
+            if (state.isPrefilling) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+
+            if (!state.fromGoogleBooks && !state.isPrefilling) {
+                SearchEntryRow(onClick = onSearchClick)
+            }
+
+            state.prefillError?.let { message ->
+                InfoBanner(
+                    text = message,
+                    icon = Icons.Filled.Warning,
+                    container = colors.errorContainer,
+                    content = colors.error
+                )
+            }
+
             BookPreviewCard(
                 title = state.title,
                 author = state.author,
                 pages = state.totalPages,
                 status = state.status
             )
+
+            if (state.fromGoogleBooks) {
+                InfoBanner(
+                    text = "Google Books-тан толтырылды. Қажет болса, кез келген өрісті өзгертуге болады.",
+                    icon = Icons.Filled.Info,
+                    container = colors.primaryContainer,
+                    content = colors.primary
+                )
+            }
 
             AppTextField(
                 value = state.title,
@@ -191,6 +227,15 @@ private fun AddBookContent(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            if (state.pagesMissing && state.totalPages.isBlank()) {
+                InfoBanner(
+                    text = "Google Books бұл кітаптың бет санын көрсетпеген. Өзіңіз енгізіңіз.",
+                    icon = Icons.Filled.Warning,
+                    container = colors.tertiaryContainer,
+                    content = colors.tertiary
+                )
+            }
+
             Text(
                 text = "Мәртебе",
                 style = MaterialTheme.typography.labelMedium,
@@ -201,6 +246,91 @@ private fun AddBookContent(
                 onSelect = onStatusChange
             )
         }
+    }
+}
+
+
+@Composable
+private fun SearchEntryRow(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = MaterialTheme.colorScheme
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(colors.surface)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(13.dp))
+                .background(colors.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Search,
+                contentDescription = null,
+                tint = colors.primary,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Google Books-тан іздеу",
+                style = MaterialTheme.typography.titleMedium,
+                color = colors.onSurface
+            )
+            Text(
+                text = "Атауы немесе ISBN — өрістер өзі толады",
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant
+            )
+        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = colors.outline,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+
+@Composable
+private fun InfoBanner(
+    text: String,
+    icon: ImageVector,
+    container: Color,
+    content: Color,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(container)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = content,
+            modifier = Modifier.size(18.dp)
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            color = content
+        )
     }
 }
 
@@ -378,6 +508,40 @@ private fun AddBookDarkPreview() {
                 author = "Юваль Ной Харари",
                 totalPages = "512",
                 status = BookStatus.READING
+            ),
+            onBack = {}, onTitleChange = {}, onAuthorChange = {},
+            onPagesChange = {}, onStatusChange = {}, onSave = {}
+        )
+    }
+}
+
+@Preview(name = "AddBook · Google Books · light", showBackground = true, heightDp = 760)
+@Composable
+private fun AddBookFromGoogleBooksPreview() {
+    BookWormTheme(darkTheme = false) {
+        AddBookContent(
+            state = AddBookUiState(
+                title = "Абай жолы",
+                author = "Мұхтар Әуезов",
+                totalPages = "540",
+                fromGoogleBooks = true
+            ),
+            onBack = {}, onTitleChange = {}, onAuthorChange = {},
+            onPagesChange = {}, onStatusChange = {}, onSave = {}
+        )
+    }
+}
+
+@Preview(name = "AddBook · без страниц · light", showBackground = true, heightDp = 760)
+@Composable
+private fun AddBookMissingPagesPreview() {
+    BookWormTheme(darkTheme = false) {
+        AddBookContent(
+            state = AddBookUiState(
+                title = "Абай",
+                author = "Мұхтар Әуезов",
+                fromGoogleBooks = true,
+                pagesMissing = true
             ),
             onBack = {}, onTitleChange = {}, onAuthorChange = {},
             onPagesChange = {}, onStatusChange = {}, onSave = {}
