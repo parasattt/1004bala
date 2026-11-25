@@ -1,18 +1,24 @@
 package com.example.a1004bala.data.repository
 
 import com.example.a1004bala.data.model.SearchBook
+import com.example.a1004bala.data.remote.GoogleBooksApi
+import com.example.a1004bala.data.remote.RetrofitClient
+import com.example.a1004bala.data.remote.dto.toSearchBook
 
-class NetworkBooksRemoteRepository : BooksRemoteRepository {
-    // TODO("Dev 3)
-    override suspend fun search(query: String): List<SearchBook> =
-        emptyList()
+class NetworkBooksRemoteRepository(
+    private val api: GoogleBooksApi = RetrofitClient.api
+) : BooksRemoteRepository {
+    override suspend fun search(query: String): List<SearchBook> {
+        val trimmed = query.trim()
+        if (trimmed.isEmpty()) return emptyList()
+        return api.searchBooks(trimmed).items.orEmpty()
+            .filter { !it.id.isNullOrBlank() }
+            .map { it.toSearchBook() }
+            .distinctBy { it.id }
+    }
 
-    override suspend fun getBook(volumeId: String): SearchBook =SearchBook(
-        id = volumeId,
-        title = "",
-        author = "",
-        pageCount = null,
-        year = null,
-        coverUrl = null
-    )
+    override suspend fun getBook(volumeId: String): SearchBook {
+        require(volumeId.isNotBlank()) { "volumeId must not be blank" }
+        return api.getVolume(volumeId.trim()).toSearchBook()
+    }
 }
