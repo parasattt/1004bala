@@ -5,15 +5,21 @@ import androidx.lifecycle.viewModelScope
 import com.example.a1004bala.data.preferences.SortOrder
 import com.example.a1004bala.data.preferences.ThemeMode
 import com.example.a1004bala.data.preferences.UserPreferencesRepository
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 class SettingsViewModel(
     private val prefs: UserPreferencesRepository
 ) : ViewModel() {
+
+    private val sortSaveFailure = Channel<Unit>(Channel.CONFLATED)
+    val sortSaveFailures = sortSaveFailure.receiveAsFlow()
 
     val uiState: StateFlow<SettingsUiState> = combine(
         prefs.themeMode,
@@ -31,6 +37,12 @@ class SettingsViewModel(
     }
 
     fun onSortSelected(order: SortOrder) {
-        viewModelScope.launch { prefs.setSortOrder(order) }
+        viewModelScope.launch {
+            try {
+                prefs.setSortOrder(order)
+            } catch (_: IOException) {
+                sortSaveFailure.trySend(Unit)
+            }
+        }
     }
 }

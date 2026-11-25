@@ -19,9 +19,16 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +41,7 @@ import com.example.a1004bala.data.preferences.ThemeMode
 import com.example.a1004bala.ui.AppViewModelProvider
 import com.example.a1004bala.ui.components.BookWormTopBar
 import com.example.a1004bala.ui.components.SettingsRow
+import com.example.a1004bala.ui.components.SortSheet
 import com.example.a1004bala.ui.components.ThemeSelector
 import com.example.a1004bala.ui.theme.BookWormTheme
 
@@ -43,11 +51,19 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(viewModel) {
+        viewModel.sortSaveFailures.collect {
+            snackbarHostState.showSnackbar("Сұрыптау реті сақталмады. Қайта көріңіз.")
+        }
+    }
 
     SettingsContent(
         state = state,
         onBack = onBack,
-        onThemeSelected = viewModel::onThemeSelected
+        onThemeSelected = viewModel::onThemeSelected,
+        onSortSelected = viewModel::onSortSelected,
+        snackbarHostState = snackbarHostState
     )
 }
 
@@ -55,11 +71,26 @@ fun SettingsScreen(
 private fun SettingsContent(
     state: SettingsUiState,
     onBack: () -> Unit,
-    onThemeSelected: (ThemeMode) -> Unit
+    onThemeSelected: (ThemeMode) -> Unit,
+    onSortSelected: (SortOrder) -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val colors = MaterialTheme.colorScheme
+    var showSortSheet by rememberSaveable { mutableStateOf(false) }
+
+    if (showSortSheet) {
+        SortSheet(
+            selected = state.sortOrder,
+            onSelect = {
+                onSortSelected(it)
+                showSortSheet = false
+            },
+            onDismiss = { showSortSheet = false }
+        )
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = colors.background,
         topBar = {
             BookWormTopBar(
@@ -97,7 +128,8 @@ private fun SettingsContent(
                     iconTint = colors.primary,
                     title = "Сұрыптау",
                     subtitle = "Кітаптар реті",
-                    value = state.sortOrder.label
+                    value = state.sortOrder.label,
+                    onClick = { showSortSheet = true }
                 )
                 RowDivider()
                 SettingsRow(
@@ -175,7 +207,8 @@ private fun SettingsLightPreview() {
         SettingsContent(
             state = SettingsUiState(),
             onBack = {},
-            onThemeSelected = {}
+            onThemeSelected = {},
+            onSortSelected = {}
         )
     }
 }
@@ -195,7 +228,8 @@ private fun SettingsDarkPreview() {
                 sortOrder = SortOrder.PROGRESS
             ),
             onBack = {},
-            onThemeSelected = {}
+            onThemeSelected = {},
+            onSortSelected = {}
         )
     }
 }
