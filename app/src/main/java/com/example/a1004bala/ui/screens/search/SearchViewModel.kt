@@ -18,6 +18,7 @@ class SearchViewModel(private val repository: BooksRemoteRepository) : ViewModel
     private val _uiState = MutableStateFlow<SearchUiState>(SearchUiState.Idle)
     val uiState = _uiState.asStateFlow()
     private var searchJob: Job? = null
+    private var lastRequestedQuery: String? = null
 
     fun onQueryChange(value: String) {
         if (value == _query.value) return
@@ -28,6 +29,12 @@ class SearchViewModel(private val repository: BooksRemoteRepository) : ViewModel
 
     fun clear() = onQueryChange("")
 
+    fun retry() {
+        if (_uiState.value !is SearchUiState.Error) return
+        _query.value = lastRequestedQuery ?: return
+        search()
+    }
+
     fun search() {
         searchJob?.cancel()
         val requested = _query.value.trim()
@@ -36,6 +43,7 @@ class SearchViewModel(private val repository: BooksRemoteRepository) : ViewModel
             return
         }
         _uiState.value = SearchUiState.Loading
+        lastRequestedQuery = requested
         searchJob = viewModelScope.launch {
             val result = try {
                 val books = repository.search(requested)
