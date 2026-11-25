@@ -39,6 +39,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.a1004bala.data.model.Book
+import com.example.a1004bala.data.model.BookStatus
+import com.example.a1004bala.ui.components.ContinueReadingCard
 @Composable
 fun LibraryScreen(
     onBookClick: (Int) -> Unit,
@@ -48,6 +50,11 @@ fun LibraryScreen(
     viewModel: LibraryViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val continueBookId = if (uiState.selectedStatus == BookStatus.READING) {
+        uiState.books.firstOrNull()?.id
+    } else {
+        null
+    }
     var bookToDelete by remember { mutableStateOf<Book?>(null) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -148,11 +155,19 @@ fun LibraryScreen(
                         items = uiState.books,
                         key = { book -> book.id }
                     ) { book ->
-                        BookCard(
-                            book = book,
-                            onClick = { onBookClick(book.id) },
-                            onLongClick = { bookToDelete = book }
-                        )
+                        if (book.id == continueBookId) {
+                            ContinueReadingCard(
+                                book = book,
+                                onClick = { onBookClick(book.id) },
+                                onLongClick = { bookToDelete = book }
+                            )
+                        } else {
+                            BookCard(
+                                book = book,
+                                onClick = { onBookClick(book.id) },
+                                onLongClick = { bookToDelete = book }
+                            )
+                        }
                     }
                 }
             }
