@@ -23,9 +23,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -42,6 +45,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -154,7 +158,22 @@ private fun AddBookContent(
                 .padding(top = 4.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            SearchEntryRow(onClick = onSearchClick)
+            if (state.isPrefilling) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+
+            if (!state.fromGoogleBooks && !state.isPrefilling) {
+                SearchEntryRow(onClick = onSearchClick)
+            }
+
+            state.prefillError?.let { message ->
+                InfoBanner(
+                    text = message,
+                    icon = Icons.Filled.Warning,
+                    container = colors.errorContainer,
+                    content = colors.error
+                )
+            }
 
             BookPreviewCard(
                 title = state.title,
@@ -162,6 +181,15 @@ private fun AddBookContent(
                 pages = state.totalPages,
                 status = state.status
             )
+
+            if (state.fromGoogleBooks) {
+                InfoBanner(
+                    text = "Google Books-тан толтырылды. Қажет болса, кез келген өрісті өзгертуге болады.",
+                    icon = Icons.Filled.Info,
+                    container = colors.primaryContainer,
+                    content = colors.primary
+                )
+            }
 
             AppTextField(
                 value = state.title,
@@ -261,6 +289,38 @@ private fun SearchEntryRow(
             contentDescription = null,
             tint = colors.outline,
             modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+
+@Composable
+private fun InfoBanner(
+    text: String,
+    icon: ImageVector,
+    container: Color,
+    content: Color,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(container)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = content,
+            modifier = Modifier.size(18.dp)
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            color = content
         )
     }
 }
@@ -439,6 +499,23 @@ private fun AddBookDarkPreview() {
                 author = "Юваль Ной Харари",
                 totalPages = "512",
                 status = BookStatus.READING
+            ),
+            onBack = {}, onTitleChange = {}, onAuthorChange = {},
+            onPagesChange = {}, onStatusChange = {}, onSave = {}
+        )
+    }
+}
+
+@Preview(name = "AddBook · Google Books · light", showBackground = true, heightDp = 760)
+@Composable
+private fun AddBookFromGoogleBooksPreview() {
+    BookWormTheme(darkTheme = false) {
+        AddBookContent(
+            state = AddBookUiState(
+                title = "Абай жолы",
+                author = "Мұхтар Әуезов",
+                totalPages = "540",
+                fromGoogleBooks = true
             ),
             onBack = {}, onTitleChange = {}, onAuthorChange = {},
             onPagesChange = {}, onStatusChange = {}, onSave = {}
