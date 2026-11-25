@@ -6,18 +6,23 @@ import com.example.a1004bala.data.model.BookStatus
 import com.example.a1004bala.data.preferences.SortOrder
 import com.example.a1004bala.data.preferences.UserPreferencesRepository
 import com.example.a1004bala.data.repository.BookRepository
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 class LibraryViewModel(
     private val repository: BookRepository,
     private val preferences: UserPreferencesRepository
 ) : ViewModel() {
     private val selectedStatus = MutableStateFlow(BookStatus.READING)
+    private val sortSaveFailure = Channel<Unit>(Channel.CONFLATED)
+    val sortSaveFailures = sortSaveFailure.receiveAsFlow()
 
     val uiState: StateFlow<LibraryUiState> = combine(
         repository.getBooks(),
@@ -51,7 +56,11 @@ class LibraryViewModel(
 
     fun onSortSelected(order: SortOrder) {
         viewModelScope.launch {
-            preferences.setSortOrder(order)
+            try {
+                preferences.setSortOrder(order)
+            } catch (_: IOException) {
+                sortSaveFailure.trySend(Unit)
+            }
         }
     }
 
