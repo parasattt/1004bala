@@ -79,6 +79,15 @@ fun LibraryScreen(
     val finishedGridState = rememberLazyGridState()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    var previousSortOrder by remember { mutableStateOf(uiState.sortOrder) }
+
+    LaunchedEffect(uiState.sortOrder) {
+        if (previousSortOrder != uiState.sortOrder) {
+            listState.requestScrollToItem(0)
+            finishedGridState.requestScrollToItem(0)
+            previousSortOrder = uiState.sortOrder
+        }
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.sortSaveFailures.collect {
