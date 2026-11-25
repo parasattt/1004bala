@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.a1004bala.ui.AppViewModelProvider
+import com.example.a1004bala.ui.components.LoadingState
 import com.example.a1004bala.ui.components.SearchResultItem
 import com.example.a1004bala.ui.theme.BookWormTheme
 
@@ -81,7 +82,7 @@ internal fun SearchContent(
         Box(Modifier.fillMaxSize().padding(padding).imePadding().padding(horizontal = 18.dp)) {
             when (state) {
                 SearchUiState.Idle -> SearchIdle { value -> onQueryChange(value); submit() }
-                SearchUiState.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+                SearchUiState.Loading -> LoadingState()
                 is SearchUiState.Success -> LazyColumn(
                     contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)) {
