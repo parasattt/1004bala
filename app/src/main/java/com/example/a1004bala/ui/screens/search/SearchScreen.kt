@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.a1004bala.ui.AppViewModelProvider
+import com.example.a1004bala.ui.components.ErrorState
 import com.example.a1004bala.ui.components.LoadingState
 import com.example.a1004bala.ui.components.SearchResultItem
 import com.example.a1004bala.ui.theme.BookWormTheme
@@ -95,8 +96,8 @@ internal fun SearchContent(
                         SearchResultItem(book, onAdd = { onResultClick(book.id) })
                     }
                 }
-                is SearchUiState.Empty -> Text("Ештеңе табылмады", Modifier.align(Alignment.Center))
-                is SearchUiState.Error -> Text(state.message, Modifier.align(Alignment.Center))
+                is SearchUiState.Empty -> SearchEmpty(state.query, onClear)
+                is SearchUiState.Error -> ErrorState(state.message)
             }
         }
     }
@@ -128,4 +129,18 @@ private fun SearchIdle(onSuggestion: (String) -> Unit) {
 @Composable
 private fun SearchIdlePreview() {
     BookWormTheme { SearchContent("", SearchUiState.Idle, {}, {}, {}, {}, {}) }
+}
+
+@Composable
+private fun SearchEmpty(query: String, onClear: () -> Unit) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 36.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically)) {
+        Icon(Icons.Default.Search, null, Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Ештеңе табылмады", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
+        Text("«$query» бойынша кітап жоқ. Атауын басқаша жазып көріңіз немесе ISBN енгізіңіз.",
+            textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        FilledTonalButton(onClick = onClear) { Text("Іздеуді тазалау") }
+    }
 }
