@@ -1,6 +1,7 @@
 package com.example.a1004bala.ui.screens.addbook
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,8 +21,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -78,6 +82,7 @@ fun AddBookScreen(
         state = state,
         onBack = onBack,
         onLibraryClick = onLibraryClick,
+        onSearchClick = onSearchClick,
         onTitleChange = viewModel::onTitleChange,
         onAuthorChange = viewModel::onAuthorChange,
         onPagesChange = viewModel::onPagesChange,
@@ -91,6 +96,7 @@ private fun AddBookContent(
     state: AddBookUiState,
     onBack: () -> Unit,
     onLibraryClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {},
     onTitleChange: (String) -> Unit,
     onAuthorChange: (String) -> Unit,
     onPagesChange: (String) -> Unit,
@@ -148,6 +154,8 @@ private fun AddBookContent(
                 .padding(top = 4.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
+            SearchEntryRow(onClick = onSearchClick)
+
             BookPreviewCard(
                 title = state.title,
                 author = state.author,
@@ -201,6 +209,59 @@ private fun AddBookContent(
                 onSelect = onStatusChange
             )
         }
+    }
+}
+
+
+@Composable
+private fun SearchEntryRow(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = MaterialTheme.colorScheme
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(colors.surface)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(13.dp))
+                .background(colors.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Search,
+                contentDescription = null,
+                tint = colors.primary,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Google Books-тан іздеу",
+                style = MaterialTheme.typography.titleMedium,
+                color = colors.onSurface
+            )
+            Text(
+                text = "Атауы немесе ISBN — өрістер өзі толады",
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant
+            )
+        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = colors.outline,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
 
