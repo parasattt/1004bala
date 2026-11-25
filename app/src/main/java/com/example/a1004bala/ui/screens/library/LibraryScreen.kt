@@ -28,6 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.a1004bala.ui.AppViewModelProvider
 import com.example.a1004bala.ui.components.BookCard
 import com.example.a1004bala.ui.components.EmptyState
+import com.example.a1004bala.ui.components.SortSheet
 import com.example.a1004bala.ui.components.StatusTabs
 import com.example.a1004bala.ui.components.TopBarIconButton
 import androidx.compose.material.icons.Icons
@@ -36,10 +37,12 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.example.a1004bala.data.model.Book
 import com.example.a1004bala.data.model.BookStatus
@@ -59,8 +62,20 @@ fun LibraryScreen(
         null
     }
     var bookToDelete by remember { mutableStateOf<Book?>(null) }
+    var showSortSheet by rememberSaveable { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+
+    if (showSortSheet) {
+        SortSheet(
+            selected = uiState.sortOrder,
+            onSelect = { order ->
+                viewModel.onSortSelected(order)
+                showSortSheet = false
+            },
+            onDismiss = { showSortSheet = false }
+        )
+    }
 
     bookToDelete?.let { book ->
         AlertDialog(
@@ -149,6 +164,15 @@ fun LibraryScreen(
                 counts = uiState.counts,
                 onTabSelected = viewModel::onTabSelected
             )
+
+            OutlinedButton(
+                onClick = { showSortSheet = true },
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(top = 8.dp)
+            ) {
+                Text("Сұрыптау: ${uiState.sortOrder.label}")
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
