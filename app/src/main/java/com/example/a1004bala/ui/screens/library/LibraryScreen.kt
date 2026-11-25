@@ -29,8 +29,11 @@ import com.example.a1004bala.ui.AppViewModelProvider
 import com.example.a1004bala.ui.components.BookCard
 import com.example.a1004bala.ui.components.EmptyState
 import com.example.a1004bala.ui.components.StatusTabs
+import com.example.a1004bala.ui.components.TopBarIconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.AlertDialog
@@ -128,6 +131,16 @@ fun LibraryScreen(
                 LibraryNavButton(
                     selected = true,
                     onClick = { scope.launch { listState.animateScrollToItem(0) } }
+                )
+                TopBarIconButton(
+                    icon = Icons.Filled.Search,
+                    contentDescription = "Кітап іздеу",
+                    onClick = onSearchClick
+                )
+                TopBarIconButton(
+                    icon = Icons.Filled.Settings,
+                    contentDescription = "Баптаулар",
+                    onClick = onSettingsClick
                 )
             }
 
