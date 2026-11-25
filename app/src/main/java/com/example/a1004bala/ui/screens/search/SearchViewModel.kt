@@ -1,6 +1,42 @@
 package com.example.a1004bala.ui.screens.search
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.a1004bala.data.repository.BooksRemoteRepository
+import com.google.gson.JsonParseException
+import java.io.IOException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
-class SearchViewModel(private val repository: BooksRemoteRepository): ViewModel()
+class SearchViewModel(private val repository: BooksRemoteRepository) : ViewModel() {
+    private val _query = MutableStateFlow("")
+    val query = _query.asStateFlow()
+    private val _uiState = MutableStateFlow<SearchUiState>(SearchUiState.Idle)
+    val uiState = _uiState.asStateFlow()
+
+    fun onQueryChange(value: String) { _query.value = value }
+
+    fun search() {
+        val requested = _query.value.trim()
+        if (requested.isBlank()) {
+            _uiState.value = SearchUiState.Idle
+            return
+        }
+        _uiState.value = SearchUiState.Loading
+        viewModelScope.launch {
+            _uiState.value = try {
+                val books = repository.search(requested)
+                if (books.isEmpty()) SearchUiState.Empty(requested) else SearchUiState.Success(books)
+            } catch (e: IOException) {
+                SearchUiState.Error("Интернет байланысын тексеріңіз де, қайта көріңіз.")
+            } catch (e: HttpException) {
+                SearchUiState.Error(if (e.code() == 429) "Сұрау саны шектелді. Сәлден кейін қайталаңыз."
+                    else "Сервер қатесі (${e.code()}). Қайта көріңіз.")
+            } catch (e: JsonParseException) {
+                SearchUiState.Error("Сервер жауабын оқу мүмкін болмады. Қайта көріңіз.")
+            }
+        }
+    }
+}
