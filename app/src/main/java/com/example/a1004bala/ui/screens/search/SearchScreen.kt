@@ -40,7 +40,7 @@ fun SearchScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     SearchContent(query, state, viewModel::onQueryChange, viewModel::search,
-        viewModel::clear, onBack, onResultClick)
+        viewModel::clear, onBack, onResultClick, viewModel::retry)
 }
 
 @Composable
@@ -51,7 +51,8 @@ internal fun SearchContent(
     onSearch: () -> Unit,
     onClear: () -> Unit,
     onBack: () -> Unit,
-    onResultClick: (String) -> Unit
+    onResultClick: (String) -> Unit,
+    onRetry: () -> Unit = onSearch
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
     val submit: () -> Unit = { keyboard?.hide(); onSearch() }
@@ -97,7 +98,7 @@ internal fun SearchContent(
                     }
                 }
                 is SearchUiState.Empty -> SearchEmpty(state.query, onClear)
-                is SearchUiState.Error -> ErrorState(state.message)
+                is SearchUiState.Error -> ErrorState(state.message, onRetry)
             }
         }
     }
