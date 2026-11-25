@@ -49,7 +49,8 @@ class SearchViewModel(private val repository: BooksRemoteRepository) : ViewModel
                 val books = repository.search(requested)
                 if (books.isEmpty()) SearchUiState.Empty(requested) else SearchUiState.Success(books)
             } catch (e: IOException) {
-                SearchUiState.Error("Интернет байланысын тексеріңіз де, қайта көріңіз.")
+                SearchUiState.Error("Google Books-қа қосыла алмадық. Интернетті тексеріп, қайталап көріңіз.",
+                    title = "Байланыс жоқ")
             } catch (e: HttpException) {
                 SearchUiState.Error(if (e.code() == 429) "Сұрау саны шектелді. Сәлден кейін қайталаңыз."
                     else "Сервер қатесі (${e.code()}). Қайта көріңіз.")

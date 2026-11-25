@@ -11,9 +11,10 @@ interface GoogleBooksApi {
     suspend fun searchBooks(
         @Query("q") query: String,
         @Query("maxResults") maxResults: Int = 20,
-        @Query("printType") printType: String = "books"
+        @Query("printType") printType: String = "books",
+        @Query("key") apiKey: String? = null
     ): VolumesResponseDto
 
     @GET("volumes/{id}")
-    suspend fun getVolume(@Path("id") id: String): VolumeDto
+    suspend fun getVolume(@Path("id") id: String, @Query("key") apiKey: String? = null): VolumeDto
 }
