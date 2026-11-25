@@ -26,4 +26,7 @@ data class AddBookUiState(
     val prefillError: String? = null,
     val isSaving: Boolean = false,
     val isSaved: Boolean = false
-)
+) {
+    val canSave: Boolean
+        get() = !isSaving && !(pagesMissing && totalPages.isBlank())
+}

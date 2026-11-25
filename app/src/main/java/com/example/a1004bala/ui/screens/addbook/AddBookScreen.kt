@@ -139,7 +139,7 @@ private fun AddBookContent(
                         focusManager.clearFocus()
                         onSave()
                     },
-                    enabled = !state.isSaving,
+                    enabled = state.canSave,
                     shape = CircleShape,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -226,6 +226,15 @@ private fun AddBookContent(
                 },
                 modifier = Modifier.fillMaxWidth()
             )
+
+            if (state.pagesMissing && state.totalPages.isBlank()) {
+                InfoBanner(
+                    text = "Google Books бұл кітаптың бет санын көрсетпеген. Өзіңіз енгізіңіз.",
+                    icon = Icons.Filled.Warning,
+                    container = colors.tertiaryContainer,
+                    content = colors.tertiary
+                )
+            }
 
             Text(
                 text = "Мәртебе",
@@ -516,6 +525,23 @@ private fun AddBookFromGoogleBooksPreview() {
                 author = "Мұхтар Әуезов",
                 totalPages = "540",
                 fromGoogleBooks = true
+            ),
+            onBack = {}, onTitleChange = {}, onAuthorChange = {},
+            onPagesChange = {}, onStatusChange = {}, onSave = {}
+        )
+    }
+}
+
+@Preview(name = "AddBook · без страниц · light", showBackground = true, heightDp = 760)
+@Composable
+private fun AddBookMissingPagesPreview() {
+    BookWormTheme(darkTheme = false) {
+        AddBookContent(
+            state = AddBookUiState(
+                title = "Абай",
+                author = "Мұхтар Әуезов",
+                fromGoogleBooks = true,
+                pagesMissing = true
             ),
             onBack = {}, onTitleChange = {}, onAuthorChange = {},
             onPagesChange = {}, onStatusChange = {}, onSave = {}
