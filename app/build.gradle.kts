@@ -1,7 +1,18 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+}
+
+val localConfiguration = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+val googleBooksApiKey = providers.environmentVariable("GOOGLE_BOOKS_API_KEY")
+    .getOrElse(localConfiguration.getProperty("GOOGLE_BOOKS_API_KEY", "")).trim()
+require(googleBooksApiKey.isEmpty() || googleBooksApiKey.matches(Regex("[A-Za-z0-9_-]+"))) {
+    "GOOGLE_BOOKS_API_KEY contains unsupported characters"
 }
 
 android {
@@ -16,6 +27,7 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
+        buildConfigField("String", "GOOGLE_BOOKS_API_KEY", "\"$googleBooksApiKey\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -33,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
