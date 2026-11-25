@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import kotlinx.coroutines.launch
@@ -12,6 +13,7 @@ import com.example.a1004bala.ui.components.LibraryNavButton
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -199,6 +202,15 @@ fun LibraryScreen(
                     contentPadding = PaddingValues(bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
+                    if (uiState.selectedStatus == BookStatus.FINISHED) {
+                        item(key = "finished-summary") {
+                            FinishedReadingSummary(
+                                bookCount = uiState.books.size,
+                                pagesRead = uiState.books.sumOf { it.currentPage.toLong() }
+                            )
+                        }
+                    }
+
                     items(
                         items = uiState.books,
                         key = { book -> book.id }
@@ -218,6 +230,35 @@ fun LibraryScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FinishedReadingSummary(bookCount: Int, pagesRead: Long) {
+    val colors = MaterialTheme.colorScheme
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        color = colors.secondaryContainer,
+        contentColor = colors.onSecondaryContainer
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = pagesRead.toString(),
+                style = MaterialTheme.typography.headlineSmall
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text("бет оқылды", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = "$bookCount кітап толық аяқталды",
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
         }
     }
