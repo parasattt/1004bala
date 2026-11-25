@@ -102,7 +102,8 @@ class AddBookViewModel(
                 title = state.title.trim(),
                 author = state.author.trim(),
                 totalPages = state.totalPages.trim().toInt(),
-                status = state.status
+                status = state.status,
+                coverUrl = state.coverUrl
             )
             _uiState.update { it.copy(isSaving = false, isSaved = true) }
         }
