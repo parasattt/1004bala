@@ -40,6 +40,7 @@ class LibraryViewModel(
             selectedStatus = status,
             books = sortedBooks,
             sortOrder = sortOrder,
+            isLoading = false,
             counts = BookStatus.tabOrder.associateWith { tabStatus ->
                 books.count { it.status == tabStatus }
             }

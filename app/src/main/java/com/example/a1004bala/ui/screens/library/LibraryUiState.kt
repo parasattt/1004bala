@@ -8,5 +8,6 @@ data class LibraryUiState(
     val selectedStatus: BookStatus = BookStatus.READING,
     val books: List<Book> = emptyList(),
     val counts: Map<BookStatus, Int> = BookStatus.tabOrder.associateWith { 0 },
-    val sortOrder: SortOrder = SortOrder.RECENT
+    val sortOrder: SortOrder = SortOrder.RECENT,
+    val isLoading: Boolean = true
 )

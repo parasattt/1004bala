@@ -1,6 +1,7 @@
 package com.example.a1004bala.ui.screens.library
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -51,6 +52,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -95,7 +97,7 @@ fun LibraryScreen(
         }
     }
 
-    if (showSortSheet) {
+    if (showSortSheet && !uiState.isLoading) {
         SortSheet(
             selected = uiState.sortOrder,
             onSelect = { order ->
@@ -207,6 +209,7 @@ fun LibraryScreen(
 
             OutlinedButton(
                 onClick = { showSortSheet = true },
+                enabled = !uiState.isLoading,
                 modifier = Modifier
                     .align(Alignment.End)
                     .padding(top = 8.dp)
@@ -216,7 +219,14 @@ fun LibraryScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (uiState.books.isEmpty()) {
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else if (uiState.books.isEmpty()) {
                 EmptyState(
                     onAddClick = onAddClick,
                     modifier = Modifier.weight(1f)
