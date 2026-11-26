@@ -79,7 +79,7 @@ fun AddBookScreen(
 
 
     LaunchedEffect(state.isSaved) {
-        if (state.isSaved) onBack()
+        if (state.isSaved) onLibraryClick()
     }
 
     AddBookContent(
