@@ -1,21 +1,47 @@
 package com.example.a1004bala.ui.screens.addbook
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.a1004bala.data.model.BookStatus
 import com.example.a1004bala.data.repository.BookRepository
+import com.example.a1004bala.data.repository.BooksRemoteRepository
+import com.example.a1004bala.ui.navigation.Screen
+import java.io.IOException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 class AddBookViewModel(
-    private val repository: BookRepository
+    private val savedStateHandle: SavedStateHandle,
+    private val repository: BookRepository,
+    private val remote: BooksRemoteRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddBookUiState())
     val uiState: StateFlow<AddBookUiState> = _uiState.asStateFlow()
+
+    init {
+        val volumeId = savedStateHandle.get<String>(Screen.AddBook.ARG)
+        if (volumeId != null) loadVolume(volumeId)
+    }
+
+    private fun loadVolume(volumeId: String) {
+        _uiState.update { it.copy(isPrefilling = true, prefillError = null) }
+        viewModelScope.launch {
+            try {
+                val book = remote.getBook(volumeId)
+                _uiState.update { it.prefilledFrom(book).copy(isPrefilling = false) }
+            } catch (e: IOException) {
+                _uiState.update { it.copy(isPrefilling = false, prefillError = ERROR_PREFILL) }
+            } catch (e: HttpException) {
+                _uiState.update { it.copy(isPrefilling = false, prefillError = ERROR_PREFILL) }
+            }
+        }
+    }
 
 
 
@@ -76,7 +102,8 @@ class AddBookViewModel(
                 title = state.title.trim(),
                 author = state.author.trim(),
                 totalPages = state.totalPages.trim().toInt(),
-                status = state.status
+                status = state.status,
+                coverUrl = state.coverUrl
             )
             _uiState.update { it.copy(isSaving = false, isSaved = true) }
         }

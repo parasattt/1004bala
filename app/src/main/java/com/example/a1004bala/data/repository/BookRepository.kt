@@ -11,7 +11,8 @@ interface BookRepository {
     fun getQuotes(bookId: Int): Flow<List<Quote>>
 
     suspend fun addBook(title: String, author: String,
-                        totalPages: Int, status: BookStatus): Int
+                        totalPages: Int, status: BookStatus,
+                        coverUrl: String? = null ): Int
     suspend fun updateBook(book: Book)
     suspend fun updateCurrentPage(bookId: Int, currentPage: Int)
     suspend fun updateStatus(bookId: Int, status: BookStatus)

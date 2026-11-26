@@ -36,9 +36,7 @@ import com.example.a1004bala.data.model.BookStatus
 import com.example.a1004bala.ui.theme.BookWormTheme
 
 private val CardShape = RoundedCornerShape(26.dp)
-private val CoverShape = RoundedCornerShape(
-    topStart = 5.dp, topEnd = 12.dp, bottomEnd = 12.dp, bottomStart = 5.dp
-)
+
 
 @Composable
 fun BookCard(
@@ -48,8 +46,7 @@ fun BookCard(
     onLongClick: (() -> Unit)? = null
 ) {
     val colors = MaterialTheme.colorScheme
-    val coverColor = Color(book.coverColor)
-    val coverTextColor = if (coverColor.luminance() > 0.179f) Color.Black else Color.White
+
 
     Card(
         modifier = modifier
@@ -72,36 +69,16 @@ fun BookCard(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
+
+            BookCover(
+                title = book.title,
+                author = book.author,
+                coverColor = book.coverColor,
+                coverUrl = book.coverUrl,
                 modifier = Modifier
                     .size(width = 62.dp, height = 92.dp)
-                    .clip(CoverShape)
-                    .background(coverColor)
                     .clearAndSetSemantics {}
-            ) {
-                Box(
-                    modifier = Modifier
-                        .width(6.dp)
-                        .fillMaxHeight()
-                        .background(Color.Black.copy(alpha = 0.14f))
-                )
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .padding(horizontal = 5.dp, vertical = 8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = book.title,
-                        color = coverTextColor,
-                        style = MaterialTheme.typography.labelSmall,
-                        textAlign = TextAlign.Center,
-                        maxLines = 4,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
+            )
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(

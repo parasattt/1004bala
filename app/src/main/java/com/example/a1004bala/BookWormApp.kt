@@ -4,5 +4,11 @@ import android.app.Application
 import com.example.a1004bala.data.AppContainer
 
 class BookWormApp: Application() {
-    val container = AppContainer()
+    lateinit var container: AppContainer
+        private set
+
+    override fun onCreate() {
+        super.onCreate()
+        container = AppContainer(this)
+    }
 }
